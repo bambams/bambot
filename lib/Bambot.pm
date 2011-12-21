@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with bambot.  If not, see <http://www.gnu.org/licenses/>.
 # 
+
 use v5.010;
 use strict;
 use warnings;
