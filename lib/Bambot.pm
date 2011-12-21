@@ -44,7 +44,9 @@ use List::Util qw(max);
 sub auto_response
 {
     my ($self, @responses) = @_;
-    print map { (my $res = $_) =~ s/^/AUTO: /gm; $res } @responses;
+    my $response = join '', @responses;
+    $response =~ s/^/AUTO: /gm; 
+    print $response;
     $self->send(@responses);
     return $self;
 }
