@@ -91,6 +91,10 @@ sub generate_logfile_name
             grep { chomp; /\.log(?:\.[0-9]+)?$/ } readdir $dh;
     closedir $dh or warn "closedir: $!";
     $i++;
-    return "$config->{log_dir}/bambot.log.$i";
+    my $fn = "$config->{log_dir}/bambot.log.$i";
+    POSIX::close(
+            POSIX::creat($fn, 0600) or die "POSIX::create: $!") or
+            warn "POSIX::close: $!";
+    return $fn;
 }
 
