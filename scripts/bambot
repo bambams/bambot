@@ -1,0 +1,74 @@
+#!/usr/bin/perl
+
+use v5.010;
+use strict;
+use warnings;
+
+use lib 'lib';
+use Bambot;
+use Data::Dumper;
+use Getopt::Long qw/GetOptionsFromArray
+        :config auto_help bundling no_auto_abbrev no_getopt_compat
+        no_ignore_case_always no_require_order permute/;
+use List::Util qw(max);
+
+my %config = (
+    ARGV => [grep { $_ =~ /^--noexec$/ } @ARGV],
+    config_file => "$ENV{HOME}/.bambot/config",
+    log_dir => "$ENV{HOME}/.bambot/logs",
+);
+
+my %opts = (
+    'F|file=s' => \$config{config_file},
+    'L|logdir=s' => \$config{log_dir},
+    'noexec' => \$config{noexec},
+    'v|verbose' => \$config{verbose},
+);
+
+GetOptionsFromArray(\@ARGV, %opts) or exit 1;
+
+load_config(\%config);
+
+if(!$config{noexec})
+{
+    reexec(\%config);
+}
+
+Bambot->new(\%config)->connect->run;
+
+sub load_config
+{
+    my ($config) = @_;
+    open my $fh, '<', $config->{config_file} or die "open: $!";
+    while(my $line = <$fh>)
+    {
+        next if $line =~ /^\s*(#|$)/;
+        chomp $line;
+        if($line =~ /(\w+)\s*=\s*(.*)/)
+        {
+            $config{$1} = $2;
+            next;
+        }
+        warn "invalid config: $line";
+    }
+    close $fh or warn "close: $!";
+}
+
+sub reexec
+{
+    my ($config) = @_;
+    my $fn = generate_logfile_name($config);
+    exec("$0 --noexec @{$config->{ARGV}} 2>&1 | tee $fn");
+}
+
+sub generate_logfile_name
+{
+    my ($config) = @_;
+    opendir my $dh, $config->{log_dir} or die "opendir: $!";
+    my $i = max map { /\.log\.([0-9]+)/ }
+            grep { chomp; /\.log(?:\.[0-9]+)?$/ } readdir $dh;
+    closedir $dh or warn "closedir: $!";
+    $i++;
+    return "$config->{log_dir}/bambot.log.$i";
+}
+
