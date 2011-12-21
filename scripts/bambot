@@ -59,8 +59,9 @@ sub load_config
 {
     my ($config) = @_;
     open my $fh, '<', $config->{config_file} or die "open: $!";
-    die "Insecure permissions: $config->{config_file}"
-            if (stat $fh)[2] & 0777 != 0600;
+    my $mode = (stat $fh)[2];
+    die sprintf 'Insecure config permissions: %04o', $mode & 0777
+            if ($mode & 0177) != 0;
     while(my $line = <$fh>)
     {
         next if $line =~ /^\s*(#|$)/;
