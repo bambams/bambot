@@ -204,6 +204,14 @@ sub process_server_message
                         " :\001VERSION bambot:$VERSION:perl $]\001\n",
                         );
             }
+            elsif($1 =~ /^PING\b/)
+            {
+                $self->auto_response(
+                        'NOTICE ',
+                        $nick,
+                        " :\001PONG\001\n",
+                        );
+            }
         }
     }
     return $self;
