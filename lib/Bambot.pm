@@ -295,6 +295,12 @@ sub process_server_message
             $self->auto_response(
                     "PRIVMSG $target :Sleep mode activated..\n");
         }
+        elsif($is_master && $msg =~ /^~eval (.*)/)
+        {
+            my $result = "eval: $1";
+            $self->auto_response('PRIVMSG ', $target, ' :', $nick, ': ',
+                    $result, "\n");
+        }
     }
     return $self;
 }
