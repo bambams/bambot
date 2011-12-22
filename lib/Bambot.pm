@@ -150,6 +150,10 @@ sub process_client_command
     {
         $self->auto_response('PRIVMSG ', $1, ' :', $2, "\n");
     }
+    elsif($command =~ m{^/nick (\w+)})
+    {
+        $self->set_nick($1);
+    }
     elsif($command =~ m{^/p(?:art)? ([#&]?\w+) (.*)})
     {
         $self->auto_response('PART ', $1, ' :', $2, "\n");
@@ -195,10 +199,8 @@ sub register
     my $nick = $self->{nick} // 'bambot' . int rand 99;
     my $user = $self->{username} // $ENV{USER} // 'unknown' . rand(99);
     my $real_name = $self->{real_name} // 'Unknown';
-    $self->auto_response(<<EOF);
-NICK $nick
-USER $user 0 0 :$real_name
-EOF
+    $self->set_nick($self->{nick});
+    $self->auto_response('USER ', $user, ' 0 0 :', $real_name, "\n");
     $self->identify();
 
     return $self;
@@ -258,6 +260,14 @@ sub send
 {
     my ($self, @messages) = @_;
     $self->{sock_}->print(@messages);
+    return $self;
+}
+
+sub set_nick
+{
+    my ($self, $nick) = @_;
+    $self->auto_response('NICK ', $nick, "\n");
+    $self->{nick} = $nick;
     return $self;
 }
 
