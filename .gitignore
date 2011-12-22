@@ -2,5 +2,7 @@ MYMETA.json
 MYMETA.yml
 Makefile
 blib
+config
+logs
 pm_to_blib
 
