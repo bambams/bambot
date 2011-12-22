@@ -123,7 +123,12 @@ sub pong
 sub process_client_command
 {
     my ($self, $command) = @_;
-    if($command =~ /^exit|q(?:uit)?|x$/)
+    if($command =~ m{^/eval (.*)})
+    {
+        my @results = eval $1 or warn $@;
+        print Dumper \@results;
+    }
+    elsif($command =~ /^exit|q(?:uit)?|x$/)
     {
         $self->auto_response("PRIVMSG #allegro :I don't blame you...\n");
         $self->auto_response("QUIT :Shutting down...\n");
