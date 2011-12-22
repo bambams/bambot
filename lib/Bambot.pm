@@ -187,13 +187,24 @@ sub process_server_message
     {
         $self->pong($1);
     }
-    elsif($msg =~ /:(\S+)!\S+ PRIVMSG bambot :?\001VERSION\001/)
+    elsif($msg =~ /:(\S+) PRIVMSG (\S+) :?(.*)/)
     {
-        $self->auto_response(
-                'NOTICE ',
-                $1,
-                " :\001VERSION bambot:$VERSION:perl $]\001\n",
-                );
+        my ($sender, $target, $msg) = ($1, $2, $3);
+        my ($nick) = $sender =~ /(\S+)!/;
+        my $is_master = $sender =~ /\Q!~$self->{master}\E$/;
+        $target = $target eq $self->{nick} ? $nick : $target;
+        if($msg =~ /^\001(.*)\001/)
+        {
+            say STDERR "CTCP: $1" if $self->{verbose};
+            if($1 eq 'VERSION')
+            {
+                $self->auto_response(
+                        'NOTICE ',
+                        $nick,
+                        " :\001VERSION bambot:$VERSION:perl $]\001\n",
+                        );
+            }
+        }
     }
     return $self;
 }
