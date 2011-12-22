@@ -75,6 +75,7 @@ sub identify
     {
         $self->auto_response('PRIVMSG NickServ :identify ', $pwd, "\n");
     }
+    return $self;
 }
 
 sub join_channel
@@ -98,6 +99,7 @@ sub log
     $messages =~ s/^/DIAGNOSTIC: /gm;
 
     print STDERR $messages;
+    return $self;
 }
 
 sub new
@@ -251,6 +253,7 @@ sub send
 {
     my ($self, @messages) = @_;
     $self->{sock_}->print(@messages);
+    return $self;
 }
 
 1;
