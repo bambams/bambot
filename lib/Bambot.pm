@@ -34,6 +34,7 @@ BEGIN
     $EST = '2011-12-19';
 }
 
+use Class::Unload;
 use Data::Dumper;
 use File::Slurp qw(slurp);
 use IO::Handle;
@@ -162,6 +163,10 @@ sub process_client_command
     {
         $self->register();
     }
+    elsif($command =~ m{^/reload$})
+    {
+        $self->reload;
+    }
     elsif($command =~ m{^/restart$})
     {
         $self->log('Restarting ...');
@@ -204,6 +209,20 @@ sub register
     $self->identify();
 
     return $self;
+}
+
+sub reload
+{
+    my $pkg = __PACKAGE__;
+    unless(eval "require $pkg")
+    {
+        warn $@;
+        return 0;
+    };
+    Class::Unload->unload($pkg);
+    eval "require $pkg";
+    return 0 if $@;
+    return 1;
 }
 
 sub run
