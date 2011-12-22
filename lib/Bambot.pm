@@ -254,6 +254,7 @@ sub process_server_message
         my ($sender, $target, $msg) = ($1, $2, $3);
         my ($nick) = $sender =~ /(\S+)!/;
         my $is_master = $sender =~ /\Q!~$self->{master}\E$/;
+        my $is_friendly = $self->{friendly_nicks} =~ /\b\Q$nick\E\b/;
         $target = $target eq $self->{nick} ? $nick : $target;
         $self->add_urls($msg);
         if($msg =~ /^\001(.*)\001/)
@@ -275,6 +276,14 @@ sub process_server_message
                         " :\001PONG\001\n",
                         );
             }
+        }
+        elsif($is_friendly &&
+                $msg =~ /^\s*are\s*you\s*still\s*there\s*\?\s*$/i)
+        {
+             $self->auto_response(
+                    'PRIVMSG ',
+                    $target,
+                    " :Don't shoot, it's me!\n");
         }
         elsif($is_master && $msg eq '~activate')
         {
