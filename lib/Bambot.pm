@@ -375,6 +375,7 @@ sub run
                 next unless defined $line;
 
                 chomp $line;
+                $line =~ tr/\r//d;
 
                 if($rh == $sock)
                 {
