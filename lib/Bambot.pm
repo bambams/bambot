@@ -318,6 +318,12 @@ sub process_server_message
                     "(I'm looking at you, Sony)...\n")
                     if $self->reload;
         }
+        elsif($is_master && $msg =~ /^~shutdown$/)
+        {
+            $self->auto_response(
+                    "PRIVMSG $target :I don't blame you...\n");
+            $self->auto_response("QUIT :Shutting down...\n");
+        }
     }
     return $self;
 }
