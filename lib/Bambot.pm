@@ -285,6 +285,12 @@ sub process_server_message
                     $target,
                     " :Don't shoot, it's me!\n");
         }
+        elsif($is_friendly &&
+                $msg =~ m{^bambot:\s+\\o/})
+        {
+            $self->auto_response('PRIVMSG ', $target, ' :', $nick,
+                    ": \\o/\n");
+        }
         elsif($is_master && $msg eq '~activate')
         {
             $self->auto_response(
