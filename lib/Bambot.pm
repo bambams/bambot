@@ -50,7 +50,6 @@ sub add_urls
     {
         edit_file {
             my @lines = grep { /^http/ } split /^/m;
-            shift @lines;
             push @lines, @urls;
             shift @lines while @lines > 5;
             unshift @lines, <<'EOF';
