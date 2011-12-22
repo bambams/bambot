@@ -213,6 +213,16 @@ sub process_server_message
                         );
             }
         }
+        elsif($is_master && $msg eq '~activate')
+        {
+            $self->auto_response(
+                    "PRIVMSG $target :Sentry mode activated..\n");
+        }
+        elsif($is_master && $msg eq '~deactivate')
+        {
+            $self->auto_response(
+                    "PRIVMSG $target :Sleep mode activated..\n");
+        }
     }
     return $self;
 }
