@@ -178,7 +178,7 @@ sub process_server_message
 {
     my ($self, $msg) = @_;
     print 'SERVER: ', $msg, "\n";
-    if($msg =~ /PING :?([\w\.]+)/)
+    if($msg =~ /^PING :?([\w\.]+)/)
     {
         $self->pong($1);
     }
