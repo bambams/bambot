@@ -50,7 +50,7 @@ sub add_urls
     {
         edit_file {
             my @lines = grep { /^http/ } split /^/m;
-            push @lines, @urls;
+            push @lines, map { "$_\n" } @urls;
             shift @lines while @lines > 5;
             unshift @lines, <<'EOF';
 # This file is automatically written by Bambot, an IRC bot. The following
@@ -71,7 +71,7 @@ sub add_urls
 # will automatically be flushed as new ones are posted.
 EOF
 
-            $_ = join "\n", @lines;
+            $_ = join '', @lines;
         } $self->{url_file};
     }
 }
