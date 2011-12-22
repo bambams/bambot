@@ -81,7 +81,7 @@ sub identify
 sub join_channel
 {
     my ($self, @channels) = @_;
-    $self->send(map { "JOIN $_\n" } @channels);
+    $self->auto_response(map { "JOIN $_\n" } @channels);
     return $self;
 }
 
