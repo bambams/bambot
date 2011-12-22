@@ -46,35 +46,12 @@ my %opts = (
 
 GetOptionsFromArray(\@ARGV, %opts) or exit 1;
 
-load_config(\%config);
-
 if(!$config{noexec})
 {
     reexec(\%config);
 }
 
 Bambot->new(\%config)->connect->run;
-
-sub load_config
-{
-    my ($config) = @_;
-    open my $fh, '<', $config->{config_file} or die "open: $!";
-    my $mode = (stat $fh)[2];
-    die sprintf 'Insecure config permissions: %04o', $mode & 0777
-            if ($mode & 0177) != 0;
-    while(my $line = <$fh>)
-    {
-        next if $line =~ /^\s*(#|$)/;
-        chomp $line;
-        if($line =~ /(\w+)\s*=\s*(.*)/)
-        {
-            $config{$1} = $2;
-            next;
-        }
-        warn "invalid config: $line";
-    }
-    close $fh or warn "close: $!";
-}
 
 sub reexec
 {

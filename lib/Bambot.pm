@@ -121,6 +121,28 @@ sub join_channel
     return $self;
 }
 
+sub load
+{
+    my ($self) = @_;
+    open my $fh, '<', $self->{config_file} or return 0;
+    my $mode = (stat $fh)[2];
+    die sprintf 'Insecure config permissions: %04o', $mode & 0777
+            if ($mode & 0177) != 0;
+    while(my $line = <$fh>)
+    {
+        next if $line =~ /^\s*(#|$)/;
+        chomp $line;
+        if($line =~ /(\w+)\s*=\s*(.*)/)
+        {
+            $self->{$1} = $2;
+            next;
+        }
+        warn "invalid config: $line";
+    }
+    close $fh or warn "close: $!";
+    return $self;
+}
+
 sub log
 {
     my ($self, @messages) = @_;
@@ -142,11 +164,13 @@ sub new
 {
     my ($class, $config) = @_;
     my $selector = IO::Select->new(\*STDIN);
-    my %bot = (
+    my $self = {
         %$config,
         selector_ => $selector,
-    );
-    bless \%bot, $class;
+    };
+    bless $self, $class;
+    $self->load;
+    return $self;
 }
 
 sub pong
