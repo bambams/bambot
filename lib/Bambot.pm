@@ -117,6 +117,10 @@ sub identify
 sub join_channel
 {
     my ($self, @channels) = @_;
+    @channels = map {
+        (my $channel = $_) =~ s/^([^&#])/#$1/;
+        $channel
+    } @channels;
     $self->auto_response(map { "JOIN $_\n" } @channels);
     return $self;
 }
@@ -320,7 +324,7 @@ sub run
     my ($sock, $selector) = @$self{qw/sock_ selector_/};
     STDOUT->autoflush(1);
     $self->register();
-    $self->join_channel(qw(#allegro #bambot));
+    $self->join_channel(qw(allegro bambot));
     MAIN: while(1)
     {
         my @handles = $selector->can_read;
