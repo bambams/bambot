@@ -194,7 +194,6 @@ sub process_client_command
     }
     elsif($command =~ /^exit|q(?:uit)?|x$/)
     {
-        $self->auto_response("PRIVMSG #allegro :I don't blame you...\n");
         $self->auto_response("QUIT :Shutting down...\n");
         return 0;
     }
