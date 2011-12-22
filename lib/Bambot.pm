@@ -301,6 +301,14 @@ sub process_server_message
             $self->auto_response('PRIVMSG ', $target, ' :', $nick, ': ',
                     $result, "\n");
         }
+        elsif($is_master && $msg eq '~load')
+        {
+            $self->log("Master issued ~load...");
+            $self->auto_response(
+                    "PRIVMSG $target :Nom, nom, nom, ... ",
+                    "that's some good config!\n")
+                    if $self->load;
+        }
     }
     return $self;
 }
