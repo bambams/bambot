@@ -1,6 +1,8 @@
+*.tar.gz
 MYMETA.json
 MYMETA.yml
 Makefile
+Makefile.old
 blib
 config
 logs
