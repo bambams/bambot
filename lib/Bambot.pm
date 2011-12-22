@@ -36,11 +36,46 @@ BEGIN
 
 use Class::Unload;
 use Data::Dumper;
-use File::Slurp qw(slurp);
+use File::Slurp qw(edit_file slurp);
 use IO::Handle;
 use IO::Select;
 use IO::Socket::INET;
 use List::Util qw(max);
+
+sub add_urls
+{
+    my ($self, $msg) = @_;
+    my @urls = $msg =~ m{\b(https?://\S+)}gi;
+    if(@urls)
+    {
+        edit_file {
+            my @lines = grep { /^http/ } split /^/m;
+            shift @lines;
+            push @lines, @urls;
+            shift @lines while @lines > 5;
+            unshift @lines, <<'EOF';
+# This file is automatically written by Bambot, an IRC bot. The following
+# lines are things that looked like HTTP and HTTPS URIs in an IRC channel
+# that Bambot was in. It writes them to this file as a convenience for
+# users that are working from a virtual console (or other interface)
+# without copy+paste or open-URI functionality.
+#
+# Please note that there is no sensible way for Bambot to know the
+# intentions of the users posting the URIs, nor the legitimacy of the URIs
+# posted. Please use these URIs at your own risk. I am not responsible for
+# what other people post in IRC channels and while I will make every
+# effort to promptly remove URIs that I don't approve of, I make no
+# guarantees to do so (I imagine I won't even know most of the URIs that
+# get written here).
+#
+# Bambot limits the number of URIs that are recorded here so stale URIs
+# will automatically be flushed as new ones are posted.
+EOF
+
+            $_ = join "\n", @lines;
+        } $self->{url_file};
+    }
+}
 
 sub auto_response
 {
@@ -193,6 +228,7 @@ sub process_server_message
         my ($nick) = $sender =~ /(\S+)!/;
         my $is_master = $sender =~ /\Q!~$self->{master}\E$/;
         $target = $target eq $self->{nick} ? $nick : $target;
+        $self->add_urls($msg);
         if($msg =~ /^\001(.*)\001/)
         {
             say STDERR "CTCP: $1" if $self->{verbose};
