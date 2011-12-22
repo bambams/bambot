@@ -207,7 +207,8 @@ sub process_client_command
     }
     elsif($command =~ m{^/me ([#&]?\w+) (.+)})
     {
-        $self->auto_response('PRIVMSG ', $1, " :\001ACTION ", $2, "\001\n");
+        $self->auto_response('PRIVMSG ', $1, " :\001ACTION ", $2,
+                "\001\n");
     }
     elsif($command =~ m{^/msg ([#&]?\w+) (.+)})
     {
