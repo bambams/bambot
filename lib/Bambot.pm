@@ -326,7 +326,7 @@ sub process_server_message
         elsif($is_master && $msg =~ /^~shutdown$/)
         {
             $self->auto_response(
-                    "PRIVMSG $target :I don't blame you...\n");
+                    "PRIVMSG $target :$nick: I don't blame you...\n");
             $self->auto_response("QUIT :Shutting down...\n");
         }
     }
