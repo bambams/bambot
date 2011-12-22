@@ -310,6 +310,14 @@ sub process_server_message
                     "that's some good config!\n")
                     if $self->load;
         }
+        elsif($is_master && $msg eq '~reload')
+        {
+            $self->log("Master issued ~reload...");
+            $self->auto_response("PRIVMSG $target :Upgrade complete ...",
+                    q{ I hope you didn't disable "Linux" },
+                    "(I'm looking at you, Sony)...\n")
+                    if $self->reload;
+        }
     }
     return $self;
 }
