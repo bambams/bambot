@@ -140,7 +140,7 @@ sub process_client_command
     }
     elsif($command =~ m{^/j(?:oin)? ([#&]?\w+)})
     {
-        $self->auto_response('JOIN ', $1, "\n");
+        $self->join_channel($1);
     }
     elsif($command =~ m{^/me ([#&]?\w+) (.+)})
     {
@@ -212,7 +212,7 @@ sub run
     my ($sock, $selector) = @$self{qw/sock_ selector_/};
     STDOUT->autoflush(1);
     $self->register();
-    $self->join_channel('#allegro');
+    $self->join_channel(qw(#allegro #bambot));
     MAIN: while(1)
     {
         my @handles = $selector->can_read;
