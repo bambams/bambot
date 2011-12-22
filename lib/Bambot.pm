@@ -30,7 +30,7 @@ our $EST;
 
 BEGIN
 {
-    $VERSION = '0.0001';
+    $VERSION = version->declare('0.0.1');
     $EST = '2011-12-19';
 }
 
