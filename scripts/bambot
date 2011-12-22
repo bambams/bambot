@@ -32,7 +32,7 @@ use Getopt::Long qw/GetOptionsFromArray
 use List::Util qw(max);
 
 my %config = (
-    ARGV => [grep { $_ =~ /^--noexec$/ } @ARGV],
+    ARGV => [grep { $_ !~ /^--noexec$/ } @ARGV],
     config_file => "$ENV{HOME}/.bambot/config",
     log_dir => "$ENV{HOME}/.bambot/logs",
 );
