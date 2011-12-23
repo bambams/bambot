@@ -69,6 +69,7 @@ sub add_urls
 #
 # Bambot limits the number of URIs that are recorded here so stale URIs
 # will automatically be flushed as new ones are posted.
+
 EOF
 
             $_ = join '', @lines;
