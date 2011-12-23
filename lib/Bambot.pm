@@ -339,17 +339,20 @@ sub process_server_message
             $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                     ": \\o/\n");
         }
-        elsif($is_friendly && $target eq '#bambot' &&
+        elsif($is_friendly && #$target eq '#bambot' &&
                 $self->_is_substitution($msg, \(my $substitution)))
         {
-            $self->auto_response('PRIVMSG ', $target, ' :', $nick,
-                    q{ meant to say something else, but I wasn't },
-                    "listening.. OPENER=$substitution->{opener}; ",
-                    "CLOSER=$substitution->{closer}; ",
-                    "PATTERN=$substitution->{pattern}; ",
-                    "REPLACEMENT=$substitution->{replacement}; ",
-                    "GLOBAL=$substitution->{global}\n",
-                    );
+            if($log ~~ /\Q$substitution->{pattern}\E/)
+            {
+                $self->auto_response('PRIVMSG ', $target, ' :', $nick,
+                        q{ meant to say something else, but I wasn't },
+                        "listening.. OPENER=$substitution->{opener}; ",
+                        "CLOSER=$substitution->{closer}; ",
+                        "PATTERN=$substitution->{pattern}; ",
+                        "REPLACEMENT=$substitution->{replacement}; ",
+                        "GLOBAL=$substitution->{global}\n",
+                        );
+            }
         }
         elsif($is_master && $msg =~ /
                 drunk|intoxicated|
