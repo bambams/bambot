@@ -423,24 +423,24 @@ sub run
         {
             for my $rh (@handles)
             {
-                my $line = <$rh>;
+                my $msg = <$rh>;
 
-                next unless defined $line;
+                next unless defined $msg;
 
-                chomp $line;
-                $line =~ tr/\r//d;
+                chomp $msg;
+                $msg =~ tr/\r//d;
 
                 if($rh == $sock)
                 {
                     $self->log('Reading from socket...',
                             { verbose => 1 });
-                    $self->process_server_message($line);
+                    $self->process_server_message($msg);
                 }
                 elsif($rh == \*STDIN)
                 {
                     $self->log('Reading from stdin...',
                             { verbose => 1 });
-                    $self->process_client_command($line) or last MAIN;
+                    $self->process_client_command($msg) or last MAIN;
                 }
                 else
                 {
