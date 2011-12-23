@@ -131,9 +131,9 @@ sub connect
 sub identify
 {
     my ($self) = @_;
-    my $pwd = $self->{password};
-
-    if(length $pwd > 0)
+    my $pwd = (map { /[^=]+=\s*(.*)/; $1 } grep { /^password/ }
+            slurp($self->{config_file}))[-1];
+    if(defined $pwd && length $pwd > 0)
     {
         $self->auto_response('PRIVMSG NickServ :identify ', $pwd, "\n");
     }
@@ -162,7 +162,7 @@ sub load
     {
         next if $line =~ /^\s*(#|$)/;
         chomp $line;
-        if($line =~ /(\w+)\s*=\s*(.*)/)
+        if($line =~ /^(\w+)\s*=\s*(.*)/)
         {
             $self->{$1} = $2;
             next;
@@ -200,6 +200,7 @@ sub new
     };
     bless $self, $class;
     $self->load;
+    delete $self->{password};
     return $self;
 }
 
