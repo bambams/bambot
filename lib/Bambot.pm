@@ -298,8 +298,8 @@ sub process_server_message
     elsif($msg =~ /:(\S+) PRIVMSG (\S+) :?(.*)/)
     {
         my ($sender, $target, $msg) = ($1, $2, $3);
-        my ($nick) = $sender =~ /(\S+)!/;
-        my $is_master = $sender =~ /\Q!~$self->{master}\E$/;
+        my ($nick, $ident) = $sender =~ /(\S+)!~(\S+)/;
+        my $is_master = $ident =~ /^\Q$self->{master}\E$/;
         my $is_friendly = $self->{friendly_nicks} =~ /\b\Q$nick\E\b/;
         $target = $target eq $self->{nick} ? $nick : $target;
         $self->add_urls($msg);
