@@ -57,7 +57,7 @@ sub _is_substitution
                 ([^\Q$closer\E]+)
                 \Q$closer\E
                 \Q$opener\E
-                ([^\Q$closer\E]+)
+                ([^\Q$closer\E]*)
                 \Q$closer\E
                 (g)?
                 $
@@ -73,7 +73,7 @@ sub _is_substitution
             return 1;
         }
     }
-    if($msg =~ m{^s(.)([^\1]+)\1([^\1]+)\1(g)?$})
+    if($msg =~ m{^s(.)([^\1]+)\1([^\1]*)\1(g)?$})
     {
         $$substitution_ref = {
             opener => $1,
