@@ -326,6 +326,19 @@ sub process_server_message
                     q{ meant to say something else, but I wasn't },
                     "listening.. PATTERN=$2; REPLACEMENT=$3\n");
         }
+        elsif($is_master && $msg =~ /
+                drunk|intoxicated|
+                beer|carling|budweiser|steam whistle|
+                amaretto|rum|scotch|vodka|whiskey/ix)
+        {
+            my @responses = (
+                    'Lush! >_>',
+                    'Why ride the wagon when you can walk...?  ::)',
+                    );
+            my $response = $responses[int rand @responses];
+            $self->auto_response('PRIVMSG ', $target, ' :', $nick,
+                    ": $response\n");
+        }
         elsif($is_master && $msg eq '~activate')
         {
             $self->auto_response(
