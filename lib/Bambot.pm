@@ -42,6 +42,32 @@ use IO::Select;
 use IO::Socket::INET;
 use List::Util qw(max);
 
+sub _is_brace_substitution
+{
+    my ($self, $msg) = @_;
+
+    my %pairs = qw/{ } ( ) [ ] < >/;
+
+    for my $open (keys %pairs)
+    {
+        my $close = $pairs{$open};
+
+        return 1 if $msg =~ /
+                ^
+                s
+                (\Q$open\E)
+                ([^\Q$close\E]+)
+                \Q$close\E
+                \Q$open\E
+                ([^\Q$close\E]+)
+                \Q$close\E
+                $
+                /x;
+    }
+
+    return 0;
+}
+
 sub add_urls
 {
     my ($self, $msg) = @_;
@@ -291,6 +317,14 @@ sub process_server_message
         {
             $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                     ": \\o/\n");
+        }
+        elsif($is_friendly && $target eq '#bambot' && (
+                $self->_is_brace_substitution($msg) ||
+                $msg =~ m{^s(.)([^\1]+)\1([^\1]+)\1$}))
+        {
+            $self->auto_response('PRIVMSG ', $target, ' :', $nick,
+                    q{ meant to say something else, but I wasn't },
+                    "listening.. PATTERN=$2; REPLACEMENT=$3\n");
         }
         elsif($is_master && $msg eq '~activate')
         {
