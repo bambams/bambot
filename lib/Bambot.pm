@@ -302,8 +302,10 @@ sub process_server_message
         my $is_master = $ident =~ /^\Q$self->{master}\E$/;
         my $is_friendly = $self->{friendly_nicks} =~ /\b\Q$nick\E\b/;
         $target = $target eq $self->{nick} ? $nick : $target;
+        my $log = $self->{log_}{$target}{$ident} //= [];
         $self->add_urls($msg);
-        if($msg =~ /^\001(.*)\001/)
+        my $is_ctcp = $msg =~ /^\001(.*)\001/;
+        if($is_ctcp)
         {
             say STDERR "CTCP: $1" if $self->{verbose};
             if($1 eq 'VERSION')
@@ -399,6 +401,11 @@ sub process_server_message
             $self->auto_response(
                     "PRIVMSG $target :$nick: I don't blame you...\n");
             $self->auto_response("QUIT :Shutting down...\n");
+        }
+        unless($is_ctcp)
+        {
+            push @$log, $msg;
+            shift @$log while @$log > 5;
         }
     }
     return $self;
