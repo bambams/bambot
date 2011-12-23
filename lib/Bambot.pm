@@ -440,6 +440,7 @@ sub run
                 {
                     $self->log('Reading from stdin...',
                             { verbose => 1 });
+                    say STDERR 'STDIN: ', $msg;
                     $self->process_client_command($msg) or last MAIN;
                 }
                 else
