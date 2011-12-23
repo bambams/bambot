@@ -42,30 +42,48 @@ use IO::Select;
 use IO::Socket::INET;
 use List::Util qw(max);
 
-sub _is_brace_substitution
+sub _is_substitution
 {
-    my ($self, $msg) = @_;
-
+    my ($self, $msg, $substitution_ref) = @_;
     my %pairs = qw/{ } ( ) [ ] < >/;
-
-    for my $open (keys %pairs)
+    undef $$substitution_ref;
+    for my $opener (keys %pairs)
     {
-        my $close = $pairs{$open};
-
-        return 1 if $msg =~ /
+        my $closer = $pairs{$opener};
+        if($msg =~ /
                 ^
                 s
-                (\Q$open\E)
-                ([^\Q$close\E]+)
-                \Q$close\E
-                \Q$open\E
-                ([^\Q$close\E]+)
-                \Q$close\E
+                \Q$opener\E
+                ([^\Q$closer\E]+)
+                \Q$closer\E
+                \Q$opener\E
+                ([^\Q$closer\E]+)
+                \Q$closer\E
+                (g)?
                 $
-                /x;
+                /x)
+        {
+            $$substitution_ref = {
+                    opener => $opener,
+                    closer => $closer,
+                    pattern => $1,
+                    replacement => $2,
+                    global => defined $3,
+                    };
+            return 1;
+        }
     }
-
-    return 0;
+    if($msg =~ m{^s(.)([^\1]+)\1([^\1]+)\1(g)?$})
+    {
+        $$substitution_ref = {
+            opener => $1,
+            pattern => $2,
+            replacement => $3,
+            global => defined $4
+        };
+        return 1;
+    }
+    return;
 }
 
 sub add_urls
@@ -319,13 +337,17 @@ sub process_server_message
             $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                     ": \\o/\n");
         }
-        elsif($is_friendly && $target eq '#bambot' && (
-                $self->_is_brace_substitution($msg) ||
-                $msg =~ m{^s(.)([^\1]+)\1([^\1]+)\1$}))
+        elsif($is_friendly && $target eq '#bambot' &&
+                $self->_is_substitution($msg, \(my $substitution)))
         {
             $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                     q{ meant to say something else, but I wasn't },
-                    "listening.. PATTERN=$2; REPLACEMENT=$3\n");
+                    "listening.. OPENER=$substitution->{opener}; ",
+                    "CLOSER=$substitution->{closer}; ",
+                    "PATTERN=$substitution->{pattern}; ",
+                    "REPLACEMENT=$substitution->{replacement}; ",
+                    "GLOBAL=$substitution->{global}\n",
+                    );
         }
         elsif($is_master && $msg =~ /
                 drunk|intoxicated|
