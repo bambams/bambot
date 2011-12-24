@@ -232,7 +232,11 @@ sub pong
 sub process_client_command
 {
     my ($self, $command) = @_;
-    if($command =~ m{^/eval (.*)})
+    if($command =~ m{^/ctcp (\S+) (.+)})
+    {
+        $self->auto_response("PRIVMSG $1 :\001$2\001\n");
+    }
+    elsif($command =~ m{^/eval (.+)})
     {
         my @results = eval $1 or warn $@;
         print Dumper \@results;
