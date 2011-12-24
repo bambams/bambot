@@ -23,7 +23,6 @@ use v5.010;
 use strict;
 use warnings;
 
-use lib 'lib';
 use Bambot;
 use Data::Dumper;
 use Getopt::Long qw/GetOptionsFromArray
