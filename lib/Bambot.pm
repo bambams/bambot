@@ -309,6 +309,8 @@ sub process_server_message
         my $log = $self->{log_}{$target}{$ident} //= [];
         $self->add_urls($msg);
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
+        my $is_substitution = $self->_is_substitution($msg,
+                \(my $substitution));
         if($is_ctcp)
         {
             say STDERR "CTCP: $1" if $self->{verbose};
@@ -343,8 +345,7 @@ sub process_server_message
             $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                     ": \\o/\n");
         }
-        elsif($is_friendly && #$target eq '#bambot' &&
-                $self->_is_substitution($msg, \(my $substitution)))
+        elsif($is_friendly && $is_substitution)
         {
             if($log ~~ /\Q$substitution->{pattern}\E/)
             {
@@ -409,7 +410,7 @@ sub process_server_message
                     "PRIVMSG $target :$nick: I don't blame you...\n");
             $self->auto_response("QUIT :Shutting down...\n");
         }
-        unless($is_ctcp)
+        unless($is_ctcp || $is_substitution)
         {
             push @$log, $msg;
             shift @$log while @$log > 5;
