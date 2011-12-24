@@ -347,15 +347,21 @@ sub process_server_message
         }
         elsif($is_friendly && $is_substitution)
         {
-            if($log ~~ /\Q$substitution->{pattern}\E/)
+            if(my ($old_msg_ref) = map { \$_; }
+                    (grep { /\Q$substitution->{pattern}\E/ } @$log)[-1])
             {
+                my ($pat, $rep, $glob) = @$substitution{
+                        qw(pattern replacement global)};
+                if($glob)
+                {
+                    $$old_msg_ref =~ s/\Q$pat\E/$rep/g;
+                }
+                else
+                {
+                    $$old_msg_ref =~ s/\Q$pat\E/$rep/;
+                }
                 $self->auto_response('PRIVMSG ', $target, ' :', $nick,
-                        q{ meant to say something else, but I wasn't },
-                        "listening.. OPENER=$substitution->{opener}; ",
-                        "CLOSER=$substitution->{closer}; ",
-                        "PATTERN=$substitution->{pattern}; ",
-                        "REPLACEMENT=$substitution->{replacement}; ",
-                        "GLOBAL=$substitution->{global}\n",
+                        " meant to say: $$old_msg_ref\n",
                         );
             }
         }
