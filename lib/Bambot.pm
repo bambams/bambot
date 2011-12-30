@@ -304,7 +304,7 @@ sub process_server_message
         my ($sender, $target, $msg) = ($1, $2, $3);
         my ($nick, $ident) = $sender =~ /(\S+)!~(\S+)/;
         my $is_master = $ident =~ /^\Q$self->{master}\E$/;
-        my $is_friendly = $self->{friendly_nicks} =~ /\b\Q$nick\E\b/;
+        my $is_friendly = $self->{friendly_idents} =~ /^\Q$ident\E$\b/;
         $target = $target eq $self->{nick} ? $nick : $target;
         my $log = $self->{log_}{$target}{$ident} //= [];
         $self->add_urls($msg);
