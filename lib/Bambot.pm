@@ -182,7 +182,19 @@ sub load
         chomp $line;
         if($line =~ /^(\w+)\s*=\s*(.*)/)
         {
-            $self->{$1} = $2;
+            my $type = ref $self->{$1};
+            if($type eq 'ARRAY')
+            {
+                $self->{$1} = [split ' ', $2];
+            }
+            elsif($type eq 'HASH')
+            {
+                $self->{$1} = {split ' ', $2};
+            }
+            else
+            {
+                $self->{$1} = $2;
+            }
             next;
         }
         warn "invalid config: $line";
