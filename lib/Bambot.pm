@@ -267,6 +267,10 @@ sub process_client_command
     {
         $self->join_channel($1);
     }
+    elsif($command =~ m{^/load$})
+    {
+        $self->load;
+    }
     elsif($command =~ m{^/me ([#&]?\w+) (.+)})
     {
         $self->auto_response('PRIVMSG ', $1, " :\001ACTION ", $2,
