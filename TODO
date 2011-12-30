@@ -1,0 +1,15 @@
+# vim: ft=text tw=0 wrap
+
+* parsing of commands.
+`-* at least into some concept of user/nick, command, and args.
+  * possibly using an existing CPAN module for correctness.
+* event-based handling of commands.
+* abstract functionality into plugin system.
+* throttled messages; limit number of automatic messages per interval.
+`-* switch from whitelist to blacklist once throttling in place.
+* 'word (sp?)' lookup word in dictionary...
+* random messages when channel activity low.
+`-* fortunes.
+  * jokes.
+* silly randomized "RPG" elements with HP/MP and stats (e.g., EXP) management. >:)
+
