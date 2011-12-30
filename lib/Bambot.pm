@@ -354,11 +354,11 @@ sub process_server_message
                         qw(pattern replacement global)};
                 if($glob)
                 {
-                    $$old_msg_ref =~ s/\Q$pat\E/$rep/g;
+                    $$old_msg_ref =~ s/\Q$pat\E/\x02$rep\x0F/g;
                 }
                 else
                 {
-                    $$old_msg_ref =~ s/\Q$pat\E/$rep/;
+                    $$old_msg_ref =~ s/\Q$pat\E/\x02$rep\x0F/;
                 }
                 $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                         " meant to say: $$old_msg_ref\n",
