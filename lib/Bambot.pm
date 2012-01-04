@@ -61,7 +61,8 @@ sub _is_substitution
                 \Q$closer\E
                 (g)?
                 $
-                /x)
+                /x &&
+                $1 ne $2)
         {
             $$substitution_ref = {
                     opener => $opener,
@@ -73,7 +74,7 @@ sub _is_substitution
             return 1;
         }
     }
-    if($msg =~ m{^s(.)([^\1]+)\1([^\1]*)\1(g)?$})
+    if($msg =~ m{^s(.)([^\1]+)\1([^\1]*)\1(g)?$} && $2 ne $3)
     {
         $$substitution_ref = {
             opener => $1,
