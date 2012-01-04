@@ -358,7 +358,7 @@ sub process_server_message
                     " :Don't shoot, it's me!\n");
         }
         elsif($is_friendly &&
-                $msg =~ m{^bambot:\s+\\o/})
+                $msg =~ m{^bambot:?\s+.*\\o/\s*$})
         {
             $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                     ": \\o/\n");
