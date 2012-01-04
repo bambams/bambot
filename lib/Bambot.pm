@@ -320,7 +320,7 @@ sub process_server_message
     elsif($msg =~ /:(\S+) PRIVMSG (\S+) :?(.*)/)
     {
         my ($sender, $target, $msg) = ($1, $2, $3);
-        my ($nick, $ident) = $sender =~ /(\S+)!~(\S+)/;
+        my ($nick, $ident) = $sender =~ /(\S+)!~?(\S+)/;
         my $is_master = $ident =~ /^\Q$self->{master}\E$/;
         my $is_friendly = $self->{friendly_idents} ~~ /^\Q$ident\E$/;
         $target = $target eq $self->{nick} ? $nick : $target;
