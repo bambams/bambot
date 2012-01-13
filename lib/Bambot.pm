@@ -76,7 +76,7 @@ sub _is_substitution
             return 1;
         }
     }
-    if($msg =~ m{^s(.)([^\1]+)\1([^\1]*)\1(g)?$} && $2 ne $3)
+    if($msg =~ m{^s([^a-zA-Z0-9])([^\1]+)\1([^\1]*)\1(g)?$} && $2 ne $3)
     {
         $$substitution_ref = {
             opener => $1,
