@@ -22,6 +22,7 @@ use v5.010;
 use strict;
 use warnings;
 use version;
+use utf8;
 
 package Bambot;
 
@@ -36,6 +37,7 @@ BEGIN
 
 use Class::Unload;
 use Data::Dumper;
+use Encode;
 use File::Slurp qw(edit_file slurp);
 use IO::Handle;
 use IO::Select;
@@ -127,7 +129,7 @@ sub auto_response
     my ($self, @responses) = @_;
     my $response = join '', @responses;
     $response =~ s/^/AUTO: /gm; 
-    print $response;
+    print encode('UTF-8', $response);
     $self->send(@responses);
     return $self;
 }
@@ -141,6 +143,7 @@ sub connect
             Proto => 'tcp',
             ) or die "IO::Socket::INET::new: $!";
 
+    binmode $sock;
     $self->{sock_} = $sock;
     $self->{selector_}->add($sock);
     #$self->{verbose_} = 1;
@@ -177,7 +180,7 @@ sub load
     my $mode = (stat $fh)[2];
     die sprintf 'Insecure config permissions: %04o', $mode & 0777
             if ($mode & 0177) != 0;
-    while(my $line = <$fh>)
+    while(my $line = decode('UTF-8', <$fh>))
     {
         next if $line =~ /^\s*(#|$)/;
         chomp $line;
@@ -253,7 +256,7 @@ sub process_client_command
     elsif($command =~ m{^/eval (.+)})
     {
         my @results = eval $1 or warn $@;
-        print Dumper \@results;
+        print encode('UTF-8', Dumper \@results);
     }
     elsif($command =~ /^exit|q(?:uit)?|x$/)
     {
@@ -312,7 +315,7 @@ sub process_client_command
 sub process_server_message
 {
     my ($self, $msg) = @_;
-    print 'SERVER: ', $msg, "\n";
+    print 'SERVER: ', encode('UTF-8', $msg), "\n";
     if($msg =~ /^PING :?([\w\.]+)/)
     {
         $self->pong($1);
@@ -331,7 +334,7 @@ sub process_server_message
                 \(my $substitution));
         if($is_ctcp)
         {
-            say STDERR "CTCP: $1" if $self->{verbose};
+            say STDERR 'CTCP: ', encode('UTF-8', $1) if $self->{verbose};
             if($1 eq 'VERSION')
             {
                 $self->auto_response(
@@ -485,7 +488,7 @@ sub run
         {
             for my $rh (@handles)
             {
-                my $msg = <$rh>;
+                my $msg = decode('UTF-8', <$rh>);
 
                 next unless defined $msg;
 
@@ -502,16 +505,16 @@ sub run
                 {
                     $self->log('Reading from stdin...',
                             { verbose => 1 });
-                    say STDERR 'STDIN: ', $msg;
+                    say STDERR 'STDIN: ', encode('UTF-8', $msg);
                     $self->process_client_command($msg) or last MAIN;
                 }
                 else
                 {
                     $self->log('Unknown handle...',
                             {verbose => 1});
-                    print Data::Dumper->Dump(
+                    print encode('UTF-8', Data::Dumper->Dump(
                             [\*STDIN, $sock, $rh],
-                            [qw(STDIN sock rh)]);
+                            [qw(STDIN sock rh)]));
                 }
             }
         }
@@ -525,6 +528,7 @@ sub run
 sub send
 {
     my ($self, @messages) = @_;
+    @messages = map encode('UTF-8', $_), @messages;
     $self->{sock_}->print(@messages);
     return $self;
 }
