@@ -1,5 +1,11 @@
 # vim: ft=text tw=0 wrap
 
+* split bambot into multiple processes.
+`-* The initial process will be the 'console'.
+`-* The console will spawn a core daemon, that connects to IRC servers, speaks IRC, and relays work to worker nodes.
+`-* Worker nodes will do the actual "work", such as processing requests, and generating responses.
+`-* The processes will all speak to one another via sockets.
+* SSL/TLS support.
 * parsing of commands.
 `-* at least into some concept of user/nick, command, and args.
   * possibly using an existing CPAN module for correctness.
