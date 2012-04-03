@@ -210,18 +210,9 @@ sub load
 
 sub log
 {
-    my ($self, @messages) = @_;
-    my $opts = $messages[-1];
-    if(ref $opts)
-    {
-        return if $opts->{verbose} && !$self->{verbose};
-        delete $messages[-1];
-    }
-
-    my $messages = join ' ', map { "$_\n" } @messages;
-    $messages =~ s/^/DIAGNOSTIC: /gm;
-
-    print STDERR $messages;
+    my ($self, $message, %opts) = @_;
+    return if $opts{verbose} && !$self->{verbose};
+    print STDERR 'DIAGNOSTIC: ', $message;
     return $self;
 }
 
@@ -418,7 +409,7 @@ sub process_server_message
         }
         elsif($is_master && $msg eq '~load')
         {
-            $self->log("Master issued ~load...");
+            $self->log('Master issued ~load...');
             $self->auto_response(
                     "PRIVMSG $target :Nom, nom, nom, ... ",
                     "that's some good config!\n")
@@ -426,7 +417,7 @@ sub process_server_message
         }
         elsif($is_master && $msg eq '~reload')
         {
-            $self->log("Master issued ~reload...");
+            $self->log('Master issued ~reload...');
             $self->auto_response("PRIVMSG $target :Upgrade complete ...",
                     q{ I hope you didn't disable "Linux" },
                     "(I'm looking at you, Sony)...\n")
@@ -498,21 +489,18 @@ sub run
 
                 if($rh == $sock)
                 {
-                    $self->log('Reading from socket...',
-                            { verbose => 1 });
+                    $self->log('Reading from socket...', verbose => 1);
                     $self->process_server_message($msg);
                 }
                 elsif($rh == \*STDIN)
                 {
-                    $self->log('Reading from stdin...',
-                            { verbose => 1 });
+                    $self->log('Reading from stdin...', verbose => 1);
                     say STDERR 'STDIN: ', encode('UTF-8', $msg);
                     $self->process_client_command($msg) or last MAIN;
                 }
                 else
                 {
-                    $self->log('Unknown handle...',
-                            {verbose => 1});
+                    $self->log('Unknown handle...', verbose => 1);
                     print encode('UTF-8', Data::Dumper->Dump(
                             [\*STDIN, $sock, $rh],
                             [qw(STDIN sock rh)]));
