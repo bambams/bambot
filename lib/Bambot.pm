@@ -100,7 +100,7 @@ sub add_urls
             my @lines = grep { /^http/ } split /^/m;
             push @lines, map { "$_\n" } @urls;
             shift @lines while @lines > 5;
-            unshift @lines, <<'EOF';
+            $_ = <<'EOF' . join '', @lines;
 # This file is automatically written by Bambot, an IRC bot. The following
 # lines are things that looked like HTTP and HTTPS URIs in an IRC channel
 # that Bambot was in. It writes them to this file as a convenience for
@@ -119,8 +119,6 @@ sub add_urls
 # will automatically be flushed as new ones are posted.
 
 EOF
-
-            $_ = join '', @lines;
         } $self->{url_file};
     }
 }
