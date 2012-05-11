@@ -224,6 +224,7 @@ sub load
         warn "invalid config: $line";
     }
     close $fh or warn "close: $!";
+    delete $self->{password};
     return $self;
 }
 
@@ -247,7 +248,6 @@ sub new
     };
     bless $self, $class;
     $self->load;
-    delete $self->{password};
     return $self;
 }
 
