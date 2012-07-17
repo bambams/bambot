@@ -188,13 +188,34 @@ sub load
         if($line =~ /^(\w+)\s*=\s*(.*)/)
         {
             my $type = ref $self->{$1};
+            my @values = split ' ', $2;
+            my $append = @values && substr($values[0], 0, 1) eq '+';
+            if($append)
+            {
+                $values[0] = substr($values[0], 1);
+            }
             if($type eq 'ARRAY')
             {
-                $self->{$1} = [split ' ', $2];
+                if($append)
+                {
+                    push @{$self->{$1}}, @values;
+                }
+                else
+                {
+                    $self->{$1} = \@values;
+                }
             }
             elsif($type eq 'HASH')
             {
-                $self->{$1} = {split ' ', $2};
+                if($append)
+                {
+                    my %values = @values;
+                    @{$self->{$1}}{keys %values} = values %values;
+                }
+                else
+                {
+                    $self->{$1} = {@values};
+                }
             }
             else
             {
