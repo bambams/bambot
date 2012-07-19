@@ -243,6 +243,7 @@ sub new
     my $selector = IO::Select->new(\*STDIN);
     my $self = {
         %$config,
+        channels => [],
         friendly_idents => [],
         selector_ => $selector,
     };
@@ -492,7 +493,7 @@ sub run
     my ($sock, $selector) = @$self{qw/sock_ selector_/};
     STDOUT->autoflush(1);
     $self->register();
-    $self->join_channel(qw(allegro bambot));
+    $self->join_channel(@{$self->{channels}});
     MAIN: while(1)
     {
         my @handles = $selector->can_read;
