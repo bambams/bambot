@@ -18,7 +18,7 @@
 # along with bambot.  If not, see <http://www.gnu.org/licenses/>.
 # 
 
-use v5.010;
+use v5.016;
 use strict;
 use warnings;
 use version;
