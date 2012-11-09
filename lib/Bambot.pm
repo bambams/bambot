@@ -367,7 +367,13 @@ sub process_server_message
             }
         }
         elsif($is_friendly &&
-                $msg =~ /^\s*are\s*you\s*still\s*there\s*\?\s*$/i)
+                $msg eq "$self->{nick}: help")
+        {
+            $self->auto_response('PRIVMSG ', $target,
+                    " :You're gonna need it.\n");
+        }
+        elsif($is_friendly &&
+                $msg =~ /^\s*are\s+you\s+still\s+there\s*\?\s*$/i)
         {
              $self->auto_response(
                     'PRIVMSG ',
