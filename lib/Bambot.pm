@@ -418,7 +418,7 @@ sub process_server_message
                         );
             }
         }
-        elsif($is_master && $msg =~ /
+        elsif(0 && $is_master && $msg =~ /
                 drunk|intoxicated|
                 beer|carling|budweiser|steam whistle|
                 amaretto|rum|scotch|vodka|whiskey/ix)
