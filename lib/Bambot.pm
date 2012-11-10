@@ -474,6 +474,20 @@ sub process_server_message
                     "PRIVMSG $target :$nick: I don't blame you...\n");
             $self->auto_response("QUIT :Shutting down...\n");
         }
+        if(!$is_ctcp && $msg eq '\\o/')
+        {
+            $self->{'\\o/'}++;
+            if($self->{'\\o/'} > 1 && !$self->{'\\o/ed'})
+            {
+                $self->auto_response('PRIVMSG ', $target, ' :', "\\o/\n");
+                $self->{'\\o/ed'} = 1;
+            }
+        }
+        else
+        {
+            $self->{'\\o/'} = 0;
+            $self->{'\\o/ed'} = 0;
+        }
         unless($is_ctcp || $is_substitution)
         {
             push @$log, $msg;
