@@ -431,6 +431,11 @@ sub process_server_message
             $self->auto_response('PRIVMSG ', $target, ' :', $nick,
                     ": $response\n");
         }
+        elsif($is_friendly && $msg =~ /^~\s+\S/)
+        {
+            $self->auto_response('PRIVMSG ', $target,
+                    " :I could tell you if I wasn't so busy. Sorry...\n");
+        }
         elsif($is_master && $msg eq '~activate')
         {
             $self->auto_response(
