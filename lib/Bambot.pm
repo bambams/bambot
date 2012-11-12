@@ -474,10 +474,15 @@ sub process_server_message
         }
         elsif($is_friendly && $msg eq '~sing')
         {
+            my @wannabee_lyrics = (
+                " :It's Friday, Friday, gotta get down on Friday...",
+                "Oh, oh, oh, it's Thanksgiving... " .
+                        "We, we, we are gonna have a good time...",
+            );
+            my $wannabee_lyric =
+                    $wannabee_lyrics[int rand @wannabee_lyrics];
             $self->auto_response(
-                    'PRIVMSG ', $target,
-                    " :It's Friday, Friday, " .
-                    "gotta get down on Friday...\n");
+                    'PRIVMSG ', $target, ' :', $wannabee_lyric, "\n");
         }
         if(!$is_ctcp && $msg eq '\\o/')
         {
