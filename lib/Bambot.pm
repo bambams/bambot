@@ -472,6 +472,13 @@ sub process_server_message
                     "PRIVMSG $target :$nick: I don't blame you...\n");
             $self->auto_response("QUIT :Shutting down...\n");
         }
+        elsif($is_friendly && $msg eq '~sing')
+        {
+            $self->auto_response(
+                    'PRIVMSG ', $target,
+                    " :It's Friday, Friday, " .
+                    "gotta get down on Friday...\n");
+        }
         if(!$is_ctcp && $msg eq '\\o/')
         {
             $self->{'\\o/'}++;
