@@ -1,6 +1,6 @@
 # 
 # bambot is a simple IRC bot.
-# Copyright (C) 2011 Brandon McCaig
+# Copyright (C) 2011, 2012 Brandon McCaig
 # 
 # This file is part of bambot.
 # 
