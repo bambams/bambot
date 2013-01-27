@@ -21,4 +21,3 @@ WriteMakefile(
             'List::Util' => 0,
         },
         VERSION_FROM => 'lib/Bambot.pm');
-
