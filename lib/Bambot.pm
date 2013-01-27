@@ -126,10 +126,8 @@ EOF
 sub auto_response
 {
     my ($self, @responses) = @_;
-    my $response = join '', @responses;
-    $response =~ s/^/AUTO: /gm; 
-    print encode('UTF-8', $response);
     $self->send(@responses);
+    print encode('UTF-8', "AUTO: $_\n") for @responses;
     return $self;
 }
 
@@ -149,6 +147,12 @@ sub connect
     return $self;
 }
 
+sub ctcp
+{
+    my ($msg) = @_;
+    return "\001$msg\001";
+}
+
 sub identify
 {
     my ($self) = @_;
@@ -156,7 +160,7 @@ sub identify
             slurp($self->{config_file}))[-1];
     if(defined $pwd && length $pwd > 0)
     {
-        $self->auto_response('PRIVMSG NickServ :identify ', $pwd, "\n");
+        $self->privmsg('NickServ', "identify $pwd");
     }
     return $self;
 }
@@ -168,7 +172,7 @@ sub join_channel
         (my $channel = $_) =~ s/^([^&#])/#$1/;
         $channel
     } @channels;
-    $self->auto_response(map { "JOIN $_\n" } @channels);
+    $self->auto_response("JOIN $_") for @channels;
     return $self;
 }
 
@@ -251,10 +255,22 @@ sub new
     return $self;
 }
 
+sub notice
+{
+    my ($self, $target, $msg) = @_;
+    $self->auto_response("NOTICE $target :$msg");
+}
+
+sub privmsg
+{
+    my ($self, $target, $msg) = @_;
+    $self->auto_response("PRIVMSG $target :$msg");
+}
+
 sub pong
 {
     my ($self, @servers) = @_;
-    $self->auto_response("PONG @servers\n");
+    $self->auto_response("PONG @servers");
     return $self;
 }
 
@@ -263,7 +279,7 @@ sub process_client_command
     my ($self, $command) = @_;
     if($command =~ m{^/ctcp (\S+) (.+)})
     {
-        $self->auto_response("PRIVMSG $1 :\001$2\001\n");
+        $self->privmsg($1, $self->ctcp($2));
     }
     elsif($command =~ m{^/eval (.+)})
     {
@@ -272,7 +288,7 @@ sub process_client_command
     }
     elsif($command =~ /^exit|q(?:uit)?|x$/)
     {
-        $self->auto_response("QUIT :Shutting down...\n");
+        $self->quit();
         return 0;
     }
     elsif($command =~ m{^/identify$})
@@ -289,12 +305,11 @@ sub process_client_command
     }
     elsif($command =~ m{^/me ([#&]?\w+) (.+)})
     {
-        $self->auto_response('PRIVMSG ', $1, " :\001ACTION ", $2,
-                "\001\n");
+        $self->privmsg($1, $self->ctcp("ACTION $2"));
     }
     elsif($command =~ m{^/msg ([#&]?\w+) (.+)})
     {
-        $self->auto_response('PRIVMSG ', $1, ' :', $2, "\n");
+        $self->privmsg($1, $2);
     }
     elsif($command =~ m{^/nick (\w+)})
     {
@@ -302,7 +317,7 @@ sub process_client_command
     }
     elsif($command =~ m{^/p(?:art)? ([#&]?\w+) (.*)})
     {
-        $self->auto_response('PART ', $1, ' :', $2, "\n");
+        $self->auto_response("PART $1 :$2");
     }
     elsif($command =~ m{^/register})
     {
@@ -319,7 +334,7 @@ sub process_client_command
     }
     else
     {
-        $self->send($command, "\n");
+        $self->send($command);
     }
     return $self;
 }
@@ -327,7 +342,7 @@ sub process_client_command
 sub process_server_message
 {
     my ($self, $msg) = @_;
-    print 'SERVER: ', encode('UTF-8', $msg), "\n";
+    print encode('UTF-8', "SERVER: $msg\n");
     if($msg =~ /^PING :?([\w\.]+)/)
     {
         $self->pong($1);
@@ -349,34 +364,23 @@ sub process_server_message
             say STDERR 'CTCP: ', encode('UTF-8', $1) if $self->{verbose};
             if($1 eq 'VERSION')
             {
-                $self->auto_response(
-                        'NOTICE ',
-                        $nick,
-                        " :\001VERSION bambot:$VERSION:perl $]\001\n",
-                        );
+                $self->notice($nick,
+                        $self->ctcp("VERSION bambot:$VERSION:perl $]"));
             }
             elsif($1 =~ /^PING\b/)
             {
-                $self->auto_response(
-                        'NOTICE ',
-                        $nick,
-                        " :\001PONG\001\n",
-                        );
+                $self->notice($nick, $self->ctcp("PONG"));
             }
         }
         elsif($is_friendly &&
                 $msg eq "$self->{nick}: help")
         {
-            $self->auto_response('PRIVMSG ', $target,
-                    " :You're gonna need it.\n");
+            $self->privmsg($target, "You're gonna need it.");
         }
         elsif($is_friendly &&
                 $msg =~ /^\s*are\s+you\s+still\s+there\s*\?\s*$/i)
         {
-             $self->auto_response(
-                    'PRIVMSG ',
-                    $target,
-                    " :Don't shoot, it's me!\n");
+             $self->privmsg($target, "Don't shoot, it's me!");
         }
         elsif($is_friendly &&
                 $msg =~
@@ -385,16 +389,12 @@ sub process_server_message
                         say\s+my\s+name[,\s+]\s*
                         say\s+my\s+name\s*[\.!1]*\s*$/ix)
         {
-            $self->auto_response(
-                    'PRIVMSG ',
-                    $target,
-                    " :$nick: Fine, I'll do it.\n");
+            $self->privmsg($target, "$nick: Fine, I'll do it.");
         }
         elsif($is_friendly &&
                 $msg =~ m{^bambot:?\s+.*\\o/\s*$})
         {
-            $self->auto_response('PRIVMSG ', $target, ' :', $nick,
-                    ": \\o/\n");
+            $self->privmsg($target, "$nick: \\o/");
         }
         elsif($is_friendly && $is_substitution)
         {
@@ -411,9 +411,8 @@ sub process_server_message
                 {
                     $$old_msg_ref =~ s/\Q$pat\E/\x02$rep\x0F/;
                 }
-                $self->auto_response('PRIVMSG ', $target, ' :', $nick,
-                        " meant to say: $$old_msg_ref\n",
-                        );
+                $self->privmsg($target,
+                        "$nick meant to say: $$old_msg_ref");
             }
         }
         elsif(0 && $is_master && $msg =~ /
@@ -426,70 +425,64 @@ sub process_server_message
                     'Why ride the wagon when you can walk...?  ::)',
                     );
             my $response = $responses[int rand @responses];
-            $self->auto_response('PRIVMSG ', $target, ' :', $nick,
-                    ": $response\n");
+            $self->privmsg($target, "$nick: $response");
         }
         elsif($is_friendly && $msg =~ /^~\s+\S/)
         {
-            $self->auto_response('PRIVMSG ', $target,
-                    " :I could tell you if I wasn't so busy. Sorry...\n");
+            $self->privmsg($target,
+                    q/I could tell you if I wasn't so busy. Sorry.../);
         }
         elsif($is_master && $msg eq '~activate')
         {
-            $self->auto_response(
-                    "PRIVMSG $target :Sentry mode activated..\n");
+            $self->privmsg($target, 'Sentry mode activated..');
         }
         elsif($is_master && $msg eq '~deactivate')
         {
-            $self->auto_response(
-                    "PRIVMSG $target :Sleep mode activated..\n");
+            $self->privmsg($target, 'Sleep mode activated..');
         }
         elsif($is_master && $msg =~ /^~eval (.*)/)
         {
             my $result = "eval: $1";
-            $self->auto_response('PRIVMSG ', $target, ' :', $nick, ': ',
-                    $result, "\n");
+            $self->privmsg($target, "$nick: $result");
         }
         elsif($is_master && $msg eq '~load')
         {
             $self->log('Master issued ~load...');
-            $self->auto_response(
-                    "PRIVMSG $target :Nom, nom, nom, ... ",
-                    "that's some good config!\n")
+            $self->privmsg($target,
+                    q/Nom, nom, nom, ... that's some good config!/)
                     if $self->load;
         }
         elsif($is_master && $msg eq '~reload')
         {
             $self->log('Master issued ~reload...');
-            $self->auto_response("PRIVMSG $target :Upgrade complete ...",
-                    q{ I hope you didn't disable "Linux" },
-                    "(I'm looking at you, Sony)...\n")
+            $self->privmsg($target,
+                    'Upgrade complete ...' .
+                    q/ I hope you didn't disable "Linux"/ .
+                    q/( I'm looking at you, Sony).../)
                     if $self->reload;
         }
-        elsif($is_master && $msg =~ /^~shutdown$/)
+        elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/)
         {
-            $self->auto_response(
-                    "PRIVMSG $target :$nick: I don't blame you...\n");
-            $self->auto_response("QUIT :Shutting down...\n");
+            $self->privmsg($target, "$nick: I don't blame you...");
+            $self->quit($1 || ());
         }
         elsif($is_friendly && $msg eq '~sing')
         {
             my @wannabee_lyrics = (
-                " :It's Friday, Friday, gotta get down on Friday...",
+                "It's Friday, Friday, gotta get down on Friday...",
                 "Oh, oh, oh, it's Thanksgiving... " .
                         "We, we, we are gonna have a good time...",
             );
             my $wannabee_lyric =
                     $wannabee_lyrics[int rand @wannabee_lyrics];
-            $self->auto_response(
-                    'PRIVMSG ', $target, ' :', $wannabee_lyric, "\n");
+            $self->privmsg($target, $wannabee_lyric);
         }
         if(!$is_ctcp && $msg eq '\\o/')
         {
             $self->{'\\o/'}++;
             if($self->{'\\o/'} > 1 && !$self->{'\\o/ed'})
             {
-                $self->auto_response('PRIVMSG ', $target, ' :', "\\o/\n");
+                $self->privmsg($target, '\\o/');
                 $self->{'\\o/ed'} = 1;
             }
         }
@@ -507,6 +500,13 @@ sub process_server_message
     return $self;
 }
 
+sub quit
+{
+    my ($self, $msg) = @_;
+    $msg //= 'Shutting down...';
+    $self->auto_response("QUIT :$msg");
+}
+
 sub register
 {
     my ($self) = @_;
@@ -514,7 +514,7 @@ sub register
     my $user = $self->{username} // $ENV{USER} // 'unknown' . rand(99);
     my $real_name = $self->{real_name} // 'Unknown';
     $self->set_nick($self->{nick});
-    $self->auto_response('USER ', $user, ' 0 0 :', $real_name, "\n");
+    $self->auto_response("USER $user 0 0 :$real_name");
     $self->identify();
 
     return $self;
@@ -586,7 +586,7 @@ sub run
 sub send
 {
     my ($self, @messages) = @_;
-    @messages = map encode('UTF-8', $_), @messages;
+    @messages = map encode('UTF-8', "$_\n"), @messages;
     $self->{sock_}->print(@messages);
     return $self;
 }
@@ -594,10 +594,9 @@ sub send
 sub set_nick
 {
     my ($self, $nick) = @_;
-    $self->auto_response('NICK ', $nick, "\n");
+    $self->auto_response("NICK $nick");
     $self->{nick} = $nick;
     return $self;
 }
 
 1;
-
