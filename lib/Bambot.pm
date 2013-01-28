@@ -233,7 +233,7 @@ sub load
 
 sub load_pwd {
     my ($self) = @_;
-    (map { /[^=]+=\s*(.*)/; $1 } grep { /^password/ }
+    (map { /[^=]+=\s*(.*)/; $1 } grep /^password/,
             slurp($self->{config_file}))[-1];
 }
 
