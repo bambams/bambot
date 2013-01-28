@@ -594,13 +594,14 @@ sub set_nick
 
 sub sing
 {
-    my @wannabee_lyrics = (
-        "It's Friday, Friday, gotta get down on Friday...",
-        "Oh, oh, oh, it's Thanksgiving... " .
-                "We, we, we are gonna have a good time...",
-    );
-    my $wannabee_lyric =
-            $wannabee_lyrics[int rand @wannabee_lyrics];
+    my ($self, $target, $nick) = @_;
+    my @wannabee_lyrics = map { chomp;$_ }
+            slurp $self->{lyrics_file} or do {
+        warn "Failed to load lyrics file: $!";
+        $self->privmsg($target, "$nick: I can't think of any songs...");
+        return;
+    };
+    my $wannabee_lyric = $wannabee_lyrics[int rand @wannabee_lyrics];
     $self->privmsg($target, $wannabee_lyric);
 }
 
