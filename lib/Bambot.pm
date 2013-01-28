@@ -468,14 +468,7 @@ sub process_server_message
         }
         elsif($is_friendly && $msg eq '~sing')
         {
-            my @wannabee_lyrics = (
-                "It's Friday, Friday, gotta get down on Friday...",
-                "Oh, oh, oh, it's Thanksgiving... " .
-                        "We, we, we are gonna have a good time...",
-            );
-            my $wannabee_lyric =
-                    $wannabee_lyrics[int rand @wannabee_lyrics];
-            $self->privmsg($target, $wannabee_lyric);
+            $self->sing($target);
         }
         if(!$is_ctcp && $msg eq '\\o/')
         {
@@ -597,6 +590,18 @@ sub set_nick
     $self->auto_response("NICK $nick");
     $self->{nick} = $nick;
     return $self;
+}
+
+sub sing
+{
+    my @wannabee_lyrics = (
+        "It's Friday, Friday, gotta get down on Friday...",
+        "Oh, oh, oh, it's Thanksgiving... " .
+                "We, we, we are gonna have a good time...",
+    );
+    my $wannabee_lyric =
+            $wannabee_lyrics[int rand @wannabee_lyrics];
+    $self->privmsg($target, $wannabee_lyric);
 }
 
 1;
