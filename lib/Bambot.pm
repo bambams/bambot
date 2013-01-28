@@ -156,8 +156,7 @@ sub ctcp
 sub identify
 {
     my ($self) = @_;
-    my $pwd = (map { /[^=]+=\s*(.*)/; $1 } grep { /^password/ }
-            slurp($self->{config_file}))[-1];
+    my $pwd = $self->load_pwd();
     if(defined $pwd && length $pwd > 0)
     {
         $self->privmsg('NickServ', "identify $pwd");
@@ -230,6 +229,12 @@ sub load
     close $fh or warn "close: $!";
     delete $self->{password};
     return $self;
+}
+
+sub load_pwd {
+    my ($self) = @_;
+    (map { /[^=]+=\s*(.*)/; $1 } grep { /^password/ }
+            slurp($self->{config_file}))[-1];
 }
 
 sub log
