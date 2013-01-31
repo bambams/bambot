@@ -537,6 +537,8 @@ sub register
 
 sub reload
 {
+    my ($self) = @_;
+    $self->log('Reloading module...');
     my $pkg = __PACKAGE__;
     unless(eval "require $pkg")
     {
