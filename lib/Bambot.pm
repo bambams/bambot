@@ -96,6 +96,10 @@ sub add_urls
     my @urls = $msg =~ m{\b(https?://\S+)}gi;
     if(@urls)
     {
+        # File::Slurp::edit_file is resetting permissions. Need to
+        # temporarily change umask so read permissions are not removed
+        # from group and others.
+        my $orig_umask = umask 033 or warn "Failed to modify umask";
         edit_file {
             my @lines = grep { /^http/ } split /^/m;
             push @lines, map { "$_\n" } @urls;
@@ -120,6 +124,7 @@ sub add_urls
 
 EOF
         } $self->{url_file};
+        umask $orig_umask or warn "Failed to restore umask";
     }
 }
 
