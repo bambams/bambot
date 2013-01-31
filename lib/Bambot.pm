@@ -154,7 +154,7 @@ sub connect
 
 sub ctcp
 {
-    my ($msg) = @_;
+    my ($self, $msg) = @_;
     return "\001$msg\001";
 }
 
