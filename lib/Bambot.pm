@@ -246,7 +246,7 @@ sub log
 {
     my ($self, $message, %opts) = @_;
     return if $opts{verbose} && !$self->{verbose};
-    print STDERR 'DIAGNOSTIC: ', $message;
+    say STDERR "DIAGNOSTIC: $message";
     return $self;
 }
 
