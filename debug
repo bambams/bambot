@@ -1,0 +1,10 @@
+#!/bin/bash
+
+config=config.debug;
+
+if [ ! -f "$config" ]; then
+    echo "'$config' not found." 1>&2;
+    exit 1;
+fi;
+
+~/perl5/bin/bambot -F"$config";
