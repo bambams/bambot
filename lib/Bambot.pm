@@ -480,6 +480,12 @@ sub process_server_message
         {
             $self->sing($target);
         }
+        elsif($msg =~ /\bmadness\b/i && $target =~ /^[#&]/ &&
+                int rand 4 == 0)
+        {
+            $self->privmsg($target,
+                    "Madness? \x{02}THIS. IS. $target!!!!!11\x{0F}");
+        }
         if(!$is_ctcp && $msg eq '\\o/')
         {
             $self->{'\\o/'}++;
