@@ -18,4 +18,4 @@
 `-* fortunes.
   * jokes.
 * silly randomized "RPG" elements with HP/MP and stats (e.g., EXP) management. >:)
-
+* add support for reading identify stuffz from netrc. See Net::Netrc.
