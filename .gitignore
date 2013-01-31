@@ -1,4 +1,5 @@
 *.tar.gz
+config.debug
 MANIFEST
 MYMETA.json
 MYMETA.yml
@@ -9,4 +10,3 @@ config
 lyrics
 logs
 pm_to_blib
-
