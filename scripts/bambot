@@ -52,7 +52,15 @@ if(!$config{noexec})
     reexec(\%config);
 }
 
-Bambot->new(\%config)->connect->run;
+our $bambot = Bambot->new(\%config);
+
+$bambot->connect->run;
+
+BEGIN {
+    $SIG{USR1} = sub {
+        $bambot->reload;
+    };
+}
 
 sub reexec
 {
