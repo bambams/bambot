@@ -1,0 +1,10 @@
+#!/bin/bash
+
+version="$(perl -e 'require q{lib/Bambot.pm}; print $Bambot::VERSION')";
+dist="Bambot-$version.tar.gz";
+
+if [ ! -f "$dist" -o "$1" == -f ]; then
+    ./build "$@";
+fi
+
+cpanm "$dist";
