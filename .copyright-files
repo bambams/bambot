@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# h4x: There must be a better way to do this, even short term.
+cat <<EOF;
+lib/Bambot.pm
+scripts/bambot
+EOF
