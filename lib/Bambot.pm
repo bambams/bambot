@@ -396,7 +396,7 @@ sub process_server_message
                 $msg =~
                 /^(?:
                         (?:$self->{nick})[:,\s]\s*)?
-                        say\s+my\s+name[,\s+]\s*
+                        say\s+my\s+name[,\s]\s*
                         say\s+my\s+name\s*[\.!1]*\s*$/ix)
         {
             $self->privmsg($target, "$nick: Fine, I'll do it.");
