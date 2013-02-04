@@ -480,6 +480,10 @@ sub process_server_message
         {
             $self->sing($target);
         }
+        elsif($is_friendly && $msg eq '~sleep')
+        {
+            $self->privmsg($target, 'Sleep mode activated...');
+        }
         elsif($msg =~ /\bmadness\b/i && $target =~ /^[#&]/)
         {
             if(int rand 4 == 0)
