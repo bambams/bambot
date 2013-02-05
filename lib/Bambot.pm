@@ -367,17 +367,19 @@ sub process_server_message
         my $log = $self->{log_}{$target}{$ident} //= [];
         $self->add_urls($msg);
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
+        my $ctcp = $1;
         my $is_substitution = $self->_is_substitution($msg,
                 \(my $substitution));
         if($is_ctcp)
         {
-            say STDERR 'CTCP: ', encode('UTF-8', $1) if $self->{verbose};
-            if($1 eq 'VERSION')
+            say STDERR 'CTCP: ', encode('UTF-8', $ctcp)
+                    if $self->{verbose};
+            if($ctcp eq 'VERSION')
             {
                 $self->notice($nick,
                         $self->ctcp("VERSION bambot:$VERSION:perl $]"));
             }
-            elsif($1 =~ /^PING\b/)
+            elsif($ctcp =~ /^PING\b/)
             {
                 $self->notice($nick, $self->ctcp("PONG"));
             }
