@@ -1,7 +1,6 @@
 *.tar.gz
 *.tar.gz.old
 config.debug
-MANIFEST
 MYMETA.json
 MYMETA.yml
 Makefile
