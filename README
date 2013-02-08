@@ -1,0 +1,61 @@
+Bambot - A simple IRC bot.
+
+This project is still relatively young and immature. As a result it hasn't
+been documented yet. I'm just throwing this together as a quick little
+get-you-started. I wouldn't consider it production ready, though for all
+intents and purpose I do run it "in production" for my own personal uses.
+
+=INSTALLATION=
+
+The module currently consists of just a single package file and a single
+program file. In practice this is all you need and you can install them
+however you wish.
+
+That said, the project does include a rudimentary Makefile.PL that uses
+ExtUtils::MakeMaker to generate a Makefile to install with. The usual
+procedure can be used to install it:
+
+  perl Makefile.PL && make all install
+
+Whether or not you require root to do so will depend on your environment.
+I'd recommend installing into a personal local::lib or perlbrew setup
+rather than into the whole system.
+
+=CONFIGURATION=
+
+Bambot my default looks for $HOME/.bambot/config. This is a simple `name =
+value' format. You can add comment lines with a prefix of '#', which
+Bambot will effectively ignore. The minimal that you should specify here
+is the host and master. For now that is all I'll describe to get you
+started. You can look through the code to see what other configuration
+options are available and what they do.
+
+  host     The server to connect to. E.g., irc.freenode.net.
+
+  master   The user and hostmask cloak of the master user. E.g.,
+           user@unaffiliated/user. You should probably use a NickServ
+           protected cloak so that the server requires a password to use
+           it. The master user gets to control the bot more fully,
+           including reloading the software, restarting it, or shutting
+           it down. You probably don't want just anybody to be able to
+           acquire this power.
+
+=COPYRIGHT=
+
+bambot is a simple IRC bot.
+Copyright (C) 2011-2013 Brandon McCaig
+
+This file is part of bambot.
+
+bambot is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+bambot is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with bambot.  If not, see <http://www.gnu.org/licenses/>.
