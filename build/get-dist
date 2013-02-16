@@ -1,0 +1,11 @@
+# vim: ft=sh
+
+function get-dist {
+    local version="$(get-version)";
+
+    if [ "$version" == '' ]; then
+        exit 1;
+    fi;
+
+    echo "Bambot-$version.tar.gz";
+}

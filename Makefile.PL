@@ -20,4 +20,4 @@ WriteMakefile(
             'IO::Socket::INET;' => 0,
             'List::Util' => 0,
         },
-        VERSION_FROM => 'lib/Bambot.pm');
+        VERSION_FROM => 'lib/Bambot/Version.pm');

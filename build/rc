@@ -1,0 +1,4 @@
+# vim: ft=sh
+
+source build/get-dist;
+source build/get-version;

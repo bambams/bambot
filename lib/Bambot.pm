@@ -26,14 +26,7 @@ use utf8;
 
 package Bambot;
 
-our $VERSION;
-our $EST;
-
-BEGIN
-{
-    $VERSION = version->declare('0.0.1');
-    $EST = '2011-12-19';
-}
+use Bambot::Version;
 
 use Class::Unload;
 use Data::Dumper;

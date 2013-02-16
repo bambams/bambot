@@ -1,7 +1,8 @@
 #!/bin/bash
 
-version="$(perl -e 'require q{lib/Bambot.pm}; print $Bambot::VERSION')";
-dist="Bambot-$version.tar.gz";
+source build/rc;
+
+dist="$(get-dist)" || exit $?;
 
 if [ -f Makefile -a "$1" == -f ]; then
     make distclean || exit $?;

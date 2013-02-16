@@ -1,0 +1,11 @@
+# vim: ft=sh
+
+function get-version {
+    perl -e 'require q{lib/Bambot/Version.pm}; print $Bambot::VERSION' \
+            2>/dev/null;
+
+    if [ $? != 0 ]; then
+        echo 'Failed to parse version. Check environment.' 1>&2;
+        exit 1;
+    fi;
+}
