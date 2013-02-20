@@ -26,12 +26,9 @@ use strict;
 use utf8;
 use warnings;
 
-our $VERSION;
-our $EST;
-
 BEGIN {
-    $EST = '2011-12-19';
-    $VERSION = version->declare('0.0.2');
+    our $EST = '2011-12-19';
+    our $VERSION = version->declare('0.0.2');
 }
 
 1;
