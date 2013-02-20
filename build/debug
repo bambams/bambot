@@ -11,4 +11,4 @@ if [ "$1" == -f ]; then
     ./debug/install "$@";
 fi;
 
-~/perl5/bin/bambot -F"$config";
+bambot -F"$config";
