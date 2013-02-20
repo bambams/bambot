@@ -26,6 +26,7 @@ use utf8;
 
 package Bambot;
 
+our ($EST, $VERSION);
 use Bambot::Version;
 
 use Class::Unload;
