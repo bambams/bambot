@@ -133,16 +133,35 @@ sub auto_response
 sub connect
 {
     my ($self) = @_;
+    $self->log("Connecting to $self->{host}:$self->{port}...");
     my $sock = IO::Socket::INET->new(
-            PeerAddr => $self->{host} // 'localhost',
-            PeerPort => $self->{port} // 6667,
+            PeerAddr => $self->{host},
+            PeerPort => $self->{port},
             Proto => 'tcp',
-            ) or die "IO::Socket::INET::new: $!";
+            ) or warn "IO::Socket::INET::new: $!";
 
-    binmode $sock;
-    $self->{sock_} = $sock;
-    $self->{selector_}->add($sock);
+    if($sock)
+    {
+        binmode $sock;
+        $self->{sock_} = $sock;
+        $self->{selector_}->add($sock);
+    }
+
     #$self->{verbose_} = 1;
+    return $self;
+}
+
+sub close
+{
+    my ($self) = @_;
+    $self->log("Closing connection...");
+    my $sock = $self->{sock_};
+    if(defined $sock)
+    {
+        $sock->close();
+        $self->{selector_}->remove($sock);
+        delete $self->{sock_};
+    }
     return $self;
 }
 
@@ -160,6 +179,15 @@ sub identify
     {
         $self->privmsg('NickServ', "identify $pwd");
     }
+    return $self;
+}
+
+sub init
+{
+    my ($self) = @_;
+    $self->log('Initializing...');
+    $self->register();
+    $self->join_channel(@{$self->{channels}});
     return $self;
 }
 
@@ -225,7 +253,7 @@ sub load
         }
         warn "invalid config: $line";
     }
-    close $fh or warn "close: $!";
+    $fh->close or warn "close: $!";
     delete $self->{password};
     return $self;
 }
@@ -522,6 +550,16 @@ sub quit
     $self->auto_response("QUIT :$msg");
 }
 
+sub reconnect
+{
+    my ($self) = @_;
+    $self->log('Reconnecting...');
+    $self->close();
+    $self->connect();
+    $self->init();
+    return $self;
+}
+
 sub register
 {
     my ($self) = @_;
@@ -554,21 +592,32 @@ sub reload
 sub run
 {
     my ($self) = @_;
-    my ($sock, $selector) = @$self{qw/sock_ selector_/};
     STDOUT->autoflush(1);
-    $self->register();
-    $self->join_channel(@{$self->{channels}});
     MAIN: while(1)
     {
+        my ($sock, $selector) = @$self{qw/sock_ selector_/};
         my @handles = $selector->can_read;
 
-        if(@handles > 0)
+        if(@handles == 0)
+        {
+            $self->log('I think our selector is broken...');
+            $self->reconnect();
+            next;
+        }
+        else
         {
             for my $rh (@handles)
             {
-                my $msg = decode('UTF-8', <$rh>);
+                my $msg = <$rh>;
 
-                next unless defined $msg;
+                unless(defined $msg)
+                {
+                    $self->log('We appear to have been disconnected...');
+                    $self->reconnect();
+                    next;
+                }
+
+                $msg = decode('UTF-8', $msg);
 
                 chomp $msg;
                 $msg =~ tr/\r//d;
@@ -595,7 +644,7 @@ sub run
         }
     }
 
-    close($sock);
+    $self->close();
 
     return $self;
 }
@@ -604,7 +653,30 @@ sub send
 {
     my ($self, @messages) = @_;
     @messages = map encode('UTF-8', "$_\n"), @messages;
-    $self->{sock_}->print(@messages);
+    my $sock = $self->{sock_};
+    unless(defined $sock)
+    {
+        $self->log('Cannot send: socket undefined.');
+        return $self;
+    }
+    if($sock->error)
+    {
+        $self->log('The socket appears to be dead.');
+        if($self->clearerr == -1)
+        {
+            $self->log('Yep, definitely dead. -_- Attempting to reconnect...');
+            $self->reconnect();
+            return $self;
+        }
+        else
+        {
+            $self->log('Apparently not dead. Just angry.');
+        }
+    }
+    else
+    {
+        $sock->print(@messages);
+    }
     return $self;
 }
 

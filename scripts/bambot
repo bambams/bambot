@@ -24,6 +24,11 @@ use strict;
 use warnings;
 use utf8;
 
+use constant {
+    DEFAULT_HOST => 'localhost',
+    DEFAULT_PORT => 6667,
+};
+
 use Bambot;
 use Data::Dumper;
 use Getopt::Long qw/GetOptionsFromArray
@@ -36,6 +41,8 @@ my %config = (
     config_file => "$ENV{HOME}/.bambot/config",
     lyrics_file => "$ENV{HOME}/.bambot/lyrics",
     log_dir => "$ENV{HOME}/.bambot/logs",
+    host => DEFAULT_HOST,
+    port => DEFAULT_PORT,
 );
 
 my %opts = (
@@ -54,7 +61,7 @@ if(!$config{noexec})
 
 our $bambot = Bambot->new(\%config);
 
-$bambot->connect->run;
+$bambot->connect->init->run;
 
 BEGIN {
     $SIG{USR1} = sub {
