@@ -5,7 +5,7 @@ source build/rc;
 dist="$(get-dist)" || exit 1;
 
 if [ ! -f "$dist" -o "$1" == -f ]; then
-    ./build/build "$@";
+    ./build/build "$@" || exit $?;
 fi
 
 cpanm "$dist";

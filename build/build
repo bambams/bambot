@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if ! ./build/compile; then
+    echo "Code doesn't compile... Aborting.";
+    exit 1;
+fi;
+
 source build/rc;
 
 dist="$(get-dist)" || exit $?;

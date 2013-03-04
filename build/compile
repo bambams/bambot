@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for f in scripts/* $(find -type f \( -name \*.pl -o -name \*.pm \) ); do
+    perl -c "$f" || exit $?;
+done;
