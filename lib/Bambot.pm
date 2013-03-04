@@ -185,9 +185,16 @@ sub identify
 sub init
 {
     my ($self) = @_;
-    $self->log('Initializing...');
-    $self->register();
-    $self->join_channel(@{$self->{channels}});
+    if(defined $self->{sock_})
+    {
+        $self->log('Initializing...');
+        $self->register();
+        $self->join_channel(@{$self->{channels}});
+    }
+    else
+    {
+        $self->log('Cannot init... Socket undefined.');
+    }
     return $self;
 }
 
@@ -280,6 +287,7 @@ sub new
         %$config,
         channels => [],
         friendly_idents => [],
+        master_nicks => [],
         selector_ => $selector,
     };
     bless $self, $class;
@@ -557,6 +565,10 @@ sub reconnect
     $self->close();
     $self->connect();
     $self->init();
+    if(defined $self->{sock_} and @{$self->{master_nicks}})
+    {
+        $self->privmsg($self->{master_nicks}[0], 'Reconnected...');
+    }
     return $self;
 }
 
