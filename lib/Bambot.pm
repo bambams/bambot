@@ -143,6 +143,7 @@ sub connect
     if($sock)
     {
         binmode $sock;
+        $self->{on_} = 1;
         $self->{sock_} = $sock;
         $self->{selector_}->add($sock);
     }
@@ -162,6 +163,7 @@ sub close
         $self->{selector_}->remove($sock);
         delete $self->{sock_};
     }
+    $self->{on_} = 0;
     return $self;
 }
 
@@ -287,6 +289,7 @@ sub new
         %$config,
         channels => [],
         friendly_idents => [],
+        on_ => 0,
         master_nicks => [],
         selector_ => $selector,
     };
@@ -571,6 +574,7 @@ sub quit
 sub reconnect
 {
     my ($self) = @_;
+    return $self unless $self->{on_};
     $self->log('Reconnecting...');
     $self->close();
     $self->connect();
