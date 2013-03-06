@@ -87,7 +87,7 @@ sub _is_substitution
 sub add_urls
 {
     my ($self, $msg) = @_;
-    my @urls = $msg =~ m{\b(https?://\S+)}gi;
+    my @urls = $msg =~ m{\b(https?://[-A-Za-z0-9_\.:/\?=%\&]+)}gi;
     if(@urls)
     {
         # File::Slurp::edit_file is resetting permissions. Need to
