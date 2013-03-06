@@ -372,9 +372,14 @@ sub process_client_command
         $self->log('Restarting ...');
         exec("$0 @{$self->{ARGV}}");
     }
+    elsif($command =~ m{^/irc\s+(.+)})
+    {
+        $self->send($1);
+    }
     else
     {
-        $self->send($command);
+        $self->log("Unknown command: $command");
+        $self->log('Use /irc for raw IRC.');
     }
     return $self;
 }
