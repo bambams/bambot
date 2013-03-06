@@ -159,8 +159,8 @@ sub close
     my $sock = $self->{sock_};
     if(defined $sock)
     {
-        $sock->close();
         $self->{selector_}->remove($sock);
+        $sock->close();
         delete $self->{sock_};
     }
     $self->{on_} = 0;
