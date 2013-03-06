@@ -376,8 +376,9 @@ sub process_client_command
     }
     elsif($command =~ m{^/restart$})
     {
-        $self->log('Restarting ...');
-        $self->close();
+        my $msg = 'Restarting ...';
+        $self->log($msg);
+        $self->quit($msg);
         exec("$0 @{$self->{ARGV}}");
     }
     elsif($command =~ m{^/irc\s+(.+)})
