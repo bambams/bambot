@@ -359,6 +359,10 @@ sub process_client_command
     {
         $self->auto_response("PART $1 :$2");
     }
+    elsif($command =~ m{^/quit\s*(.*)})
+    {
+        $self->quit($1);
+    }
     elsif($command =~ m{^/register})
     {
         $self->register();
@@ -379,7 +383,7 @@ sub process_client_command
     else
     {
         $self->log("Unknown command: $command");
-        $self->log('Use /irc for raw IRC.');
+        $self->log('Use /quit to quit. Use /irc for raw IRC.');
     }
     return $self;
 }
@@ -561,6 +565,7 @@ sub quit
     my ($self, $msg) = @_;
     $msg //= 'Shutting down...';
     $self->auto_response("QUIT :$msg");
+    $self->close();
 }
 
 sub reconnect
