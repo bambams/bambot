@@ -1,0 +1,39 @@
+#!/bin/bash
+
+source build/rc;
+
+# Check for existing changes.
+git diff --exit-code &>/dev/null;
+changes=$?;
+
+if ! git diff --exit-code lib/Bambot/Version.pm &>/dev/null; then
+    echo 'Working directory dirty! Cannot increment build. Stash or' \
+            'commit first.' 1>&2;
+    exit 1;
+fi;
+
+orig_version="$(get-version)" || exit $?;
+next_build="$(perl -E '
+    my @parts = $ARGV[0] =~ /([0-9]+)\.([0-9]+)\.([0-9]+)/ or die $!;
+    $parts[2]++;
+    print join ".", @parts;
+    ' "$orig_version")" || exit $?;
+
+sed -i -e "s/$orig_version/$next_build/" lib/Bambot/Version.pm || exit $?;
+
+echo "Build incremented. $orig_version => $next_build";
+
+if [ "$1" == "-G" ]; then
+    if [ $changes != 0 ]; then
+        echo 'Cannot track increment. Working directory dirty. Stash or' \
+                'commit first.' 1>&2;
+        exit 1;
+    fi;
+
+    echo git add lib/Bambot/Version.pm || exit $?;
+    echo git commit -m "Build incremented: $orig_version => $next_build." ||
+            exit $?;
+    echo git tag "v$next_build";
+else
+    echo "Don't forget to commit and tag.";
+fi;
