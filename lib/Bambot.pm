@@ -31,6 +31,7 @@ use Bambot::Version;
 
 use Class::Unload;
 use Data::Dumper;
+use DateTime;
 use Encode;
 use File::Slurp qw(edit_file slurp);
 use IO::Handle;
@@ -126,7 +127,8 @@ sub auto_response
 {
     my ($self, @responses) = @_;
     $self->send(@responses);
-    print encode('UTF-8', "AUTO: $_\n") for @responses;
+    my $now = DateTime->now();
+    print encode('UTF-8', "$now AUTO: $_\n") for @responses;
     return $self;
 }
 
@@ -277,7 +279,8 @@ sub log
 {
     my ($self, $message, %opts) = @_;
     return if $opts{verbose} && !$self->{verbose};
-    say STDERR "DIAGNOSTIC: $message";
+    my $now = DateTime->now();
+    say STDERR "$now DIAGNOSTIC: $message";
     return $self;
 }
 
@@ -319,7 +322,7 @@ sub pong
 
 sub process_client_command
 {
-    my ($self, $command) = @_;
+    my ($self, $command, $time) = @_;
     if($command =~ m{^/ctcp (\S+) (.+)})
     {
         $self->privmsg($1, $self->ctcp($2));
@@ -395,8 +398,8 @@ sub process_client_command
 
 sub process_server_message
 {
-    my ($self, $msg) = @_;
-    print encode('UTF-8', "SERVER: $msg\n");
+    my ($self, $msg, $time) = @_;
+    print encode('UTF-8', "$time SERVER: $msg\n");
     if($msg =~ /^PING :?([\w\.]+)/)
     {
         $self->pong($1);
@@ -645,6 +648,8 @@ sub run
                     next;
                 }
 
+                my $now = DateTime->now();
+
                 $msg = decode('UTF-8', $msg);
 
                 chomp $msg;
@@ -653,13 +658,13 @@ sub run
                 if($rh == $sock)
                 {
                     $self->log('Reading from socket...', verbose => 1);
-                    $self->process_server_message($msg);
+                    $self->process_server_message($msg, $now);
                 }
                 elsif($rh == \*STDIN)
                 {
                     $self->log('Reading from stdin...', verbose => 1);
-                    say STDERR 'STDIN: ', encode('UTF-8', $msg);
-                    $self->process_client_command($msg) or last MAIN;
+                    say STDERR $now, ' STDIN: ', encode('UTF-8', $msg);
+                    $self->process_client_command($msg, $now) or last MAIN;
                 }
                 else
                 {

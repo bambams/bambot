@@ -11,6 +11,7 @@ WriteMakefile(
         PREREQ_PM => {
             'Class::Unload' => 0,
             'Data::Dumper' => 0,
+            'DateTime' => 0,
             'Encode' => 0,
             'ExtUtils::MakeMaker' => 0,
             'File::Slurp' => 0,
