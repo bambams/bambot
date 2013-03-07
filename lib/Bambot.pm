@@ -419,8 +419,7 @@ sub process_server_message
                 \(my $substitution));
         if($is_ctcp)
         {
-            say STDERR 'CTCP: ', encode('UTF-8', $ctcp)
-                    if $self->{verbose};
+            $self->log("CTCP: $ctcp", verbose => 1);
             if($ctcp eq 'VERSION')
             {
                 $self->notice($nick,
