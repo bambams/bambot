@@ -2,22 +2,55 @@
 
 source build/rc;
 
-if ! ./build/compile; then
+build_log="$(./build/compile 2>&1)";
+errno=$?;
+
+if [ $errno != 0 ]; then
+    echo "$build_log" 1>&2;
     echo "Code doesn't compile... Aborting.";
     exit 1;
 fi;
 
+./build/bump-build;
+errno=$?;
+
+version="$(get-version)" || exit $?;
+
+if [ $errno != 0 ]; then
+    echo "Build staying at same version: $version" 1>&2;
+fi;
 
 dist="$(get-dist)" || exit $?;
 
 if [ -f Makefile -a "$1" == -f ]; then
-    make distclean || exit $?;
+    build_log="$(make distclean 2>&1)";
+    errno=$?;
+
+    if [ $errno != 0 ]; then
+        echo "$build_log" 1>&2;
+        echo 'make distclean failed...' 1>&2;
+        exit $?;
+    fi;
 fi;
 
-perl Makefile.PL || exit $?;
+build_log="$(perl Makefile.PL 2>&1)";
+errno=$?;
+
+if [ $errno != 0 ]; then
+    echo -n "$build_log" 1>&2;
+    exit $errno;
+fi;
 
 if [ -f "$dist" ]; then
-    mv -f "$dist" "$dist.old";
+    mv -f "$dist" "$dist.old" || exit $?;
 fi
 
-make dist || exit $?;
+build_log="$(make dist 2>&1)";
+errno=$?;
+
+if [ $errno != 0 ]; then
+    echo "$build_log" 1>&2;
+    exit $errno;
+fi;
+
+echo "Building $dist... done.";

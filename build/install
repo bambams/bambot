@@ -8,4 +8,12 @@ if [ ! -f "$dist" -o "$1" == -f ]; then
     ./build/build "$@" || exit $?;
 fi
 
-cpanm "$dist";
+install_log="$(cpanm "$dist" 2>&1)";
+errno=$?;
+
+if [ $errno != 0 ]; then
+    echo -n "$install_log" 1>&2;
+    exit 1;
+fi;
+
+echo "Installing $dist... done.";
