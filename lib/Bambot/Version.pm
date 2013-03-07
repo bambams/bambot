@@ -28,7 +28,7 @@ use warnings;
 
 BEGIN {
     our $EST = '2011-12-19';
-    our $VERSION = version->declare('0.0.2');
+    our $VERSION = version->declare('0.0.3');
 }
 
 1;
