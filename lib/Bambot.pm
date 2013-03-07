@@ -654,6 +654,8 @@ sub run
                 chomp $msg;
                 $msg =~ tr/\r//d;
 
+                next if $msg =~ /^\s*$/;
+
                 if($rh == $sock)
                 {
                     $self->log('Reading from socket...', verbose => 1);
