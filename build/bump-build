@@ -30,10 +30,7 @@ if [ "$1" == "-G" ]; then
         exit 1;
     fi;
 
-    echo git add lib/Bambot/Version.pm || exit $?;
-    echo git commit -m "Build incremented: $orig_version => $next_build." ||
-            exit $?;
-    echo git tag "v$next_build";
+    ./build/track-build "$orig_version" "$next_build";
 else
     echo "Don't forget to commit and tag.";
 fi;
