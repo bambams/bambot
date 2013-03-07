@@ -2,6 +2,20 @@
 
 source build/rc;
 
+force=n;
+bump_args=();
+
+# Parse arguments. For now, h4x.
+while [ $# -gt 0 ]; do
+    if [ "$1" == -f ]; then
+        force=y;
+    elif [ "$1" == -G ]; then
+        bump_args=("${bump_args[@]}" -G);
+    fi;
+
+    shift;
+done;
+
 build_log="$(./build/compile 2>&1)";
 errno=$?;
 
@@ -11,7 +25,7 @@ if [ $errno != 0 ]; then
     exit 1;
 fi;
 
-./build/bump-build;
+./build/bump-build "${bump_args[@]}";
 errno=$?;
 
 version="$(get-version)" || exit $?;
@@ -22,7 +36,7 @@ fi;
 
 dist="$(get-dist)" || exit $?;
 
-if [ -f Makefile -a "$1" == -f ]; then
+if [ -f Makefile -a "$force" == y ]; then
     build_log="$(make distclean 2>&1)";
     errno=$?;
 
