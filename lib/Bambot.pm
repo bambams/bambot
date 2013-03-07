@@ -128,7 +128,10 @@ sub auto_response
     my ($self, @responses) = @_;
     $self->send(@responses);
     my $now = DateTime->now();
-    print encode('UTF-8', "$now AUTO: $_\n") for @responses;
+    for (@responses)
+    {
+        $self->log($_, handle => \*STDOUT, level => 'AUTO');
+    }
     return $self;
 }
 
@@ -279,8 +282,10 @@ sub log
 {
     my ($self, $message, %opts) = @_;
     return if $opts{verbose} && !$self->{verbose};
+    $opts{handle} //= \*STDERR;
+    $opts{level} //= 'DIAGNOSTIC';
     my $now = DateTime->now();
-    say STDERR "$now DIAGNOSTIC: $message";
+    $opts{handle}->say("$now $opts{level}: $message");
     return $self;
 }
 
@@ -399,7 +404,9 @@ sub process_client_command
 sub process_server_message
 {
     my ($self, $msg, $time) = @_;
-    print encode('UTF-8', "$time SERVER: $msg\n");
+    $self->log("$time SERVER: $msg",
+            handle => \*STDOUT,
+            level => 'SERVER');
     if($msg =~ /^PING :?([\w\.]+)/)
     {
         $self->pong($1);
@@ -664,7 +671,9 @@ sub run
                 elsif($rh == \*STDIN)
                 {
                     $self->log('Reading from stdin...', verbose => 1);
-                    say STDERR $now, ' STDIN: ', encode('UTF-8', $msg);
+                    $self->log($msg,
+                            handle => \*STDOUT,
+                            level => 'STDIN');
                     $self->process_client_command($msg, $now) or last MAIN;
                 }
                 else
