@@ -26,7 +26,7 @@ errno=$?;
 if [ $errno != 0 ]; then
     echo "$build_log" 1>&2;
     echo "Code doesn't compile... Aborting.";
-    exit 1;
+    exit $errno;
 fi;
 
 ./build/bump-build "${bump_args[@]}";
@@ -47,7 +47,7 @@ if [ -f Makefile -a "$force" == y ]; then
     if [ $errno != 0 ]; then
         echo "$build_log" 1>&2;
         echo 'make distclean failed...' 1>&2;
-        exit $?;
+        exit $errno;
     fi;
 fi;
 
