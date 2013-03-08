@@ -28,12 +28,16 @@ bambot - A simple^Wsarcastic IRC bot.
 =head1 SYNOPSIS
 
   bambot --help
+  bambot --version
   bambot [ -F | --file=FILE ] [ -L | --logdir=DIR ] [ --noexec ]
          [ --noshenanigans ] [ -v | --verbose ]
 
     -F, --file=FILE     Specify an alternative config file.
 
     -L, --logdir=DIR    Specify an alternative log directory.
+
+    --help              Show this SYNOPSIS. (Uses Getopt::Long's
+                        auto_help)
 
     --noexec            Don't exec() pipe into tee. This is used for
                         poor-man's logging. This happens automagically,
@@ -43,6 +47,9 @@ bambot - A simple^Wsarcastic IRC bot.
     --noshenanigans     If you have to ask...
 
     -v, --verbose       Be verbose.
+
+    --version           Show module version. (Uses Getopt::Long's
+                        auto_version)
 
 =cut
 
