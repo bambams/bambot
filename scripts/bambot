@@ -19,6 +19,31 @@
 # along with bambot.  If not, see <http://www.gnu.org/licenses/>.
 # 
 
+=pod
+
+=head1 NAME
+
+bambot - A simple^Wsarcastic IRC bot.
+
+=head1 SYNOPSIS
+
+  bambot --help
+  bambot [ -F | --file=FILE ] [ -L | --logdir=DIR ] [ --noexec ]
+         [ -v | --verbose ]
+
+    -F, --file=FILE     Specify an alternative config file.
+
+    -L, --logdir=DIR    Specify an alternative log directory.
+
+    --noexec            Don't exec() pipe into tee. This is used for
+                        poor-man's logging. This happens automagically,
+                        but if for some reason you don't want this to
+                        happen you could pass this yourself.
+
+    -v, --verbose       Be verbose.
+
+=cut
+
 use v5.016;
 use strict;
 use warnings;
