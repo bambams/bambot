@@ -16,4 +16,8 @@ if [ "$1" == -f ]; then
     ./debug/install "$@";
 fi;
 
+if [ ! -e "$log_dir" ]; then
+    mkdir "$log_dir";
+fi;
+
 bambot -F"$config" -L"$log_dir";
