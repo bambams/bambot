@@ -346,6 +346,10 @@ sub process_client_command
     {
         $self->identify();
     }
+    elsif($command =~ m{^/irc\s+(.+)})
+    {
+        $self->send($1);
+    }
     elsif($command =~ m{^/j(?:oin)? ([#&]?\w+)})
     {
         $self->join_channel($1);
@@ -389,9 +393,9 @@ sub process_client_command
         $self->quit($msg);
         exec("$0 @{$self->{ARGV}}");
     }
-    elsif($command =~ m{^/irc\s+(.+)})
+    elsif($command =~ m{^/version$})
     {
-        $self->send($1);
+        $self->log(Bambot::version_str(), handle => \*STDOUT);
     }
     else
     {
@@ -539,6 +543,11 @@ sub process_server_message
         {
             $self->privmsg($target, 'Sleep mode activated...');
         }
+        elsif($is_friendly && $msg eq '~version')
+        {
+            $self->privmsg($target,
+                    "$nick: " . Bambot::version_str());
+        }
         elsif($msg =~ /\bmadness\b/i && $target =~ /^[#&]/)
         {
             if(int rand 4 == 0)
@@ -630,6 +639,7 @@ sub run
 {
     my ($self) = @_;
     STDOUT->autoflush(1);
+    $self->log(Bambot::version_str(), handle => \*STDOUT);
     MAIN: while(1)
     {
         my ($sock, $selector) = @$self{qw/sock_ selector_/};
@@ -742,6 +752,11 @@ sub sing
     };
     my $wannabee_lyric = $wannabee_lyrics[int rand @wannabee_lyrics];
     $self->privmsg($target, $wannabee_lyric);
+}
+
+sub version_str
+{
+    return "This is Bambot v$Bambot::VERSION.";
 }
 
 1;
