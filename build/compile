@@ -5,5 +5,5 @@ build_dir="${build_dir:-.}";
 cd "$build_dir/.." || exit $?;
 
 for f in scripts/* $(find -type f \( -name \*.pl -o -name \*.pm \) ); do
-    perl -c "$f" || exit $?;
+    PERL5LIB=lib perl -c "$f" || exit $?;
 done;
