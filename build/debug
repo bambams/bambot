@@ -5,6 +5,7 @@ build_dir="${build_dir:-.}";
 cd "$build_dir/.." || exit $?;
 
 config=config.debug;
+log_dir=logs.debug;
 
 if [ ! -f "$config" ]; then
     echo "'$config' not found." 1>&2;
@@ -15,4 +16,4 @@ if [ "$1" == -f ]; then
     ./debug/install "$@";
 fi;
 
-bambot -F"$config";
+bambot -F"$config" -L"$log_dir";
