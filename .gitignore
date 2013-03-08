@@ -1,12 +1,13 @@
 *.tar.gz
 *.tar.gz.old
-config.debug
 MYMETA.json
 MYMETA.yml
 Makefile
 Makefile.old
 blib
 config
+config.debug
 lyrics
 logs
+logs.debug
 pm_to_blib
