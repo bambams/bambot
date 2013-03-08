@@ -60,8 +60,8 @@ use Bambot;
 use Data::Dumper;
 use File::Find qw/finddepth/;
 use Getopt::Long qw/GetOptionsFromArray
-        :config auto_help bundling no_auto_abbrev no_getopt_compat
-        no_ignore_case_always no_require_order permute/;
+        :config auto_help auto_version bundling no_auto_abbrev
+        no_getopt_compat no_ignore_case_always no_require_order permute/;
 use List::Util qw(max);
 
 BEGIN
