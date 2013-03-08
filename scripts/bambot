@@ -64,6 +64,11 @@ use Getopt::Long qw/GetOptionsFromArray
         no_ignore_case_always no_require_order permute/;
 use List::Util qw(max);
 
+BEGIN
+{
+    our $VERSION = $Bambot::VERSION;
+}
+
 # Lets be a little evil here.
 if($< == 0 || $> == 0)
 {
