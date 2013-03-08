@@ -23,7 +23,7 @@ rather than into the whole system.
 
 =CONFIGURATION=
 
-Bambot my default looks for $HOME/.bambot/config. This is a simple `name =
+Bambot by default looks for $HOME/.bambot/config. This is a simple `name =
 value' format. You can add comment lines with a prefix of '#', which
 Bambot will effectively ignore. The minimal that you should specify here
 is the host and master. For now that is all I'll describe to get you
