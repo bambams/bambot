@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # 
 # bambot is a simple^Wsarcastic IRC bot.
 # Copyright (C) 2011-2013 Brandon McCaig
