@@ -8,6 +8,7 @@ if [ ! -f "$dist" -o "$1" == -f ]; then
     ./build/build "$@" || exit $?;
 fi
 
+dist="$(get-dist)" || exit 1;
 install_log="$(cpanm "$dist" 2>&1)";
 errno=$?;
 
