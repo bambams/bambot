@@ -124,7 +124,8 @@ sub reexec
 sub generate_logfile_name
 {
     my ($config) = @_;
-    opendir my $dh, $config->{log_dir} or die "opendir: $!";
+    opendir my $dh, $config->{log_dir} or
+            die "opendir: $config->{log_dir}: $!";
     my $i = max map { /\.log\.([0-9]+)/ }
             grep { chomp; /\.log(?:\.[0-9]+)?$/ } readdir $dh;
     closedir $dh or warn "closedir: $!";
