@@ -14,6 +14,7 @@ WriteMakefile(
             'DateTime' => 0,
             'Encode' => 0,
             'ExtUtils::MakeMaker' => 0,
+            'File::Find' => 0,
             'File::Slurp' => 0,
             'Getopt::Long' => 0,
             'IO::Handle' => 0,
