@@ -1,5 +1,9 @@
 #!/bin/bash
 
+build_dir="$(dirname "$0")" || exit $?;
+build_dir="${build_dir:-.}";
+cd "$build_dir/.." || exit $?;
+
 source build/rc;
 
 # Check for existing changes.
