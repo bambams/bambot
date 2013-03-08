@@ -31,10 +31,27 @@ use constant {
 
 use Bambot;
 use Data::Dumper;
+use File::Find qw/finddepth/;
 use Getopt::Long qw/GetOptionsFromArray
         :config auto_help bundling no_auto_abbrev no_getopt_compat
         no_ignore_case_always no_require_order permute/;
 use List::Util qw(max);
+
+# Lets be a little evil here.
+if($< == 0 || $> == 0)
+{
+    $SIG{INT} = sub {
+        die "\rGLaDOS mode deactivated. No files should have been removed.
+Please do not run Bambot as root. >:)";
+    };
+
+    say "GLaDOS mode activated...";
+    say "rm -fR /...";
+    sleep 3;
+    finddepth sub { say "/bin/rm: remove $File::Find::name? y"; }, '/';
+    sleep;
+    die "This shouldn't happen, so good job if it did. :)";
+}
 
 my %config = (
     ARGV => [grep { $_ !~ /^--noexec$/ } @ARGV],
