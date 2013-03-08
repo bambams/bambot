@@ -560,6 +560,11 @@ sub process_server_message
                 $self->log('Spartan utterance...miss.');
             }
         }
+        else
+        {
+            $self->log("Unrecognized user input from $nick: {{{$msg}}}",
+                    verbose => 1);
+        }
         if(!$is_ctcp && $msg eq '\\o/')
         {
             $self->{'\\o/'}++;
