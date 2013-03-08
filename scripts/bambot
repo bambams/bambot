@@ -29,7 +29,7 @@ bambot - A simple^Wsarcastic IRC bot.
 
   bambot --help
   bambot [ -F | --file=FILE ] [ -L | --logdir=DIR ] [ --noexec ]
-         [ -v | --verbose ]
+         [ --noshenanigans ] [ -v | --verbose ]
 
     -F, --file=FILE     Specify an alternative config file.
 
@@ -39,6 +39,8 @@ bambot - A simple^Wsarcastic IRC bot.
                         poor-man's logging. This happens automagically,
                         but if for some reason you don't want this to
                         happen you could pass this yourself.
+
+    --noshenanigans     If you have to ask...
 
     -v, --verbose       Be verbose.
 
@@ -91,6 +93,7 @@ my %opts = (
     'F|file=s' => \$config{config_file},
     'L|logdir=s' => \$config{log_dir},
     'noexec' => \$config{noexec},
+    'noshenanigans' => sub { say STDERR "Aborting..."; exit 1; },
     'v|verbose' => \$config{verbose},
 );
 
