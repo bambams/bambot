@@ -6,6 +6,18 @@ cd "$build_dir/.." || exit $?;
 
 source build/rc;
 
+last_log="$(git log -n1 --pretty=format:%s 2>/dev/null | \
+        head -n1 2>/dev/null)" || exit $?;
+
+# If the latest commit was a build bump then do nothing.
+if perl -E '
+        my $version_re = qr/[0-9]+\.[0-9]+\.[0-9]+/;
+        my $log_re = qr/Build incremented: $version_re => $version_re/;
+        exit int ! scalar $ARGV[0] =~ /$log_re/;
+        ' "$last_log"; then #&>/dev/null
+    exit 47; # Not an error. Nothing to do.
+fi;
+
 # Check for existing changes.
 git diff --exit-code &>/dev/null;
 changes=$?;
