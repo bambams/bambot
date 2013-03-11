@@ -151,6 +151,7 @@ sub connect
         $self->{on_} = 1;
         $self->{sock_} = $sock;
         $self->{selector_}->add($sock);
+        push @{$self->{connected_date}}, DateTime->now();
     }
 
     #$self->{verbose_} = 1;
@@ -167,6 +168,7 @@ sub close
         $self->{selector_}->remove($sock);
         $sock->close();
         delete $self->{sock_};
+        push @{$self->{disconnected_date}}, DateTime->now();
     }
     $self->{on_} = 0;
     return $self;
@@ -296,6 +298,7 @@ sub new
     my $self = {
         %$config,
         channels => [],
+        creation_date => DateTime->now(),
         friendly_idents => [],
         on_ => 0,
         master_nicks => [],
