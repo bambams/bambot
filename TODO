@@ -1,5 +1,6 @@
 # vim: ft=text tw=0 wrap
 
+* robust, internal logging instead of using shell and tee pipe.
 * split bambot into multiple processes.
 `-* The initial process will be the 'console'.
 `-* The console will spawn a core daemon, that connects to IRC servers, speaks IRC, and relays work to worker nodes.
