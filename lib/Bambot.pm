@@ -411,9 +411,7 @@ sub process_client_command
 sub process_server_message
 {
     my ($self, $msg, $time) = @_;
-    $self->log("$time SERVER: $msg",
-            handle => \*STDOUT,
-            level => 'SERVER');
+    $self->log($msg, handle => \*STDOUT, level => 'SERVER');
     if($msg =~ /^PING :?([\w\.]+)/)
     {
         $self->pong($1);
