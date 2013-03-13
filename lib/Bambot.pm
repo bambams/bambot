@@ -519,7 +519,7 @@ sub process_server_message
                     'Lush! >_>',
                     'Why ride the wagon when you can walk...?  ::)',
                     );
-            my $response = $responses[int rand @responses];
+            my $response = $self->pick_random(\@responses);
             $self->privmsg($target, "$nick: $response");
         }
         elsif($is_friendly && $msg =~ /^~\s+\S/)
@@ -620,6 +620,13 @@ sub quit
     $msg //= 'Shutting down...';
     $self->auto_response("QUIT :$msg");
     $self->close();
+}
+
+sub pick_random
+{
+    my ($self, $list) = @_;
+
+    return $list->[int rand @$list];
 }
 
 sub reconnect
@@ -782,8 +789,7 @@ sub sing
         $self->privmsg($target, "$nick: I can't think of any songs...");
         return;
     };
-    my $wannabee_lyric = $wannabee_lyrics[int rand @wannabee_lyrics];
-    $self->privmsg($target, $wannabee_lyric);
+    $self->privmsg($target, $self->pick_random(\@wannabee_lyrics));
 }
 
 sub version_str
