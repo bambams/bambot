@@ -27,6 +27,31 @@ use utf8;
 package Bambot;
 
 our ($EST, $VERSION);
+my @submodules;
+
+BEGIN
+{
+    sub load_
+    {
+        for (@submodules)
+        {
+            eval "require $_";
+            die $@ if $@;
+        }
+    }
+
+    sub unload_
+    {
+        for (reverse @submodules)
+        {
+            Class::Unload->unload($_);
+        }
+    }
+
+    @submodules = qw/Bambot::Version/;
+    load_();
+}
+
 use Bambot::Version;
 
 use Class::Unload;
@@ -632,9 +657,10 @@ sub reload
     my $pkg = __PACKAGE__;
     unless(eval "require $pkg")
     {
-        warn $@;
+        $self->log("Can't reload: $@");
         return 0;
     };
+    unload_();
     Class::Unload->unload($pkg);
     eval "require $pkg";
     return 0 if $@;
