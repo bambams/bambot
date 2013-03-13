@@ -475,11 +475,11 @@ sub process_server_message
                         qw(pattern replacement global)};
                 if($glob)
                 {
-                    $$old_msg_ref =~ s/\Q$pat\E/\x02$rep\x0F/g;
+                    $$old_msg_ref =~ s/$pat/\x02$rep\x0F/g;
                 }
                 else
                 {
-                    $$old_msg_ref =~ s/\Q$pat\E/\x02$rep\x0F/;
+                    $$old_msg_ref =~ s/$pat/\x02$rep\x0F/;
                 }
                 $self->privmsg($target,
                         "$nick meant to say: $$old_msg_ref");
