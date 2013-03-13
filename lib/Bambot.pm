@@ -412,7 +412,7 @@ sub process_client_command
     }
     elsif($command =~ m{^/reload$})
     {
-        $self->reload;
+        $self->log(($self->reload)[1]);
     }
     elsif($command =~ m{^/restart$})
     {
@@ -550,11 +550,7 @@ sub process_server_message
         elsif($is_master && $msg eq '~reload')
         {
             $self->log('Master issued ~reload...');
-            $self->privmsg($target,
-                    'Upgrade complete ...' .
-                    q/ I hope you didn't disable "Linux"/ .
-                    q/( I'm looking at you, Sony).../)
-                    if $self->reload;
+            $self->privmsg($target, ($self->reload)[1]);
         }
         elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/)
         {
@@ -662,16 +658,25 @@ sub reload
     my ($self) = @_;
     $self->log('Reloading module...');
     my $pkg = __PACKAGE__;
-    unless(eval "require $pkg")
+    my $status;
+    if(eval "require $pkg" && !$@)
+    {
+        unload_();
+        Class::Unload->unload($pkg);
+        eval "require $pkg";
+        $status = !$@;
+    }
+    else
     {
         $self->log("Can't reload: $@");
-        return 0;
+        $status = 0;
     };
-    unload_();
-    Class::Unload->unload($pkg);
-    eval "require $pkg";
-    return 0 if $@;
-    return 1;
+    my @msgs = (
+        [q/Upgrade failed... I can't even do that right./],
+        ['Upgrade complete... *click* *click* *click*' .
+                ' ...Still defective.']
+    );
+    return ($status, $self->pick_random($msgs[$status]));
 }
 
 sub run
