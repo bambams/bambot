@@ -449,11 +449,33 @@ sub process_server_message
         my $is_friendly = $self->{friendly_idents} ~~ /^\Q$ident\E$/;
         $target = $target eq $self->{nick} ? $nick : $target;
         my $log = $self->{log_}{$target}{$ident} //= [];
-        $self->add_urls($msg);
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
         my $ctcp = $1;
+        my $for_other_instance = 0;
+        if($msg =~ /([^:]+):\s*(.*)/)
+        {
+            $msg = $2;
+            $for_other_instance = $1 ne $self->{nick};
+            if($for_other_instance)
+            {
+                $self->log("Looks like that message was intended for $1" .
+                        ", not me ($self->{nick}).");
+            }
+        }
         my $is_substitution = $self->_is_substitution($msg,
                 \(my $substitution));
+        if($for_other_instance)
+        {
+            if($msg =~ /^~/)
+            {
+                return $self;
+            }
+            else
+            {
+                goto LOG_PRIVMSG;
+            }
+        }
+        $self->add_urls($msg);
         if($is_ctcp)
         {
             $self->log("CTCP: $ctcp", verbose => 1);
@@ -601,6 +623,7 @@ sub process_server_message
             $self->{'\\o/'} = 0;
             $self->{'\\o/ed'} = 0;
         }
+LOG_PRIVMSG:
         unless($is_ctcp || $is_substitution)
         {
             push @$log, $msg;
