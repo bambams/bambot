@@ -452,7 +452,7 @@ sub process_server_message
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
         my $ctcp = $1;
         my $for_other_instance = 0;
-        if($msg =~ /([^:]+):\s*(.*)/)
+        if($msg =~ /^([^\s:]+):\s+(.*)/)
         {
             $msg = $2;
             $for_other_instance = $1 ne $self->{nick};
