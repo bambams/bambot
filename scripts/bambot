@@ -68,6 +68,7 @@ use constant {
 
 use Bambot;
 use Data::Dumper;
+use Encode;
 use File::Find qw/finddepth/;
 use Getopt::Long qw/GetOptionsFromArray
         :config auto_help auto_version bundling no_auto_abbrev
