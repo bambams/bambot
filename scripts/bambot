@@ -122,7 +122,7 @@ $bambot->connect->init->run;
 
 BEGIN {
     $SIG{USR1} = sub {
-        $bambot->reload;
+        $bambot->log(($bambot->reload)[1]);
     };
 }
 
