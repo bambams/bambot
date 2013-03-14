@@ -29,12 +29,15 @@ bambot - A simple^Wsarcastic IRC bot.
 
   bambot --help
   bambot --version
-  bambot [ -F | --file=FILE ] [ -L | --logdir=DIR ] [ --noexec ]
-         [ --noshenanigans ] [ -v | --verbose ]
+  bambot [ -F | --file=FILE ] [ -L | --logdir=DIR ] [ -l | --log ]
+         [ --noexec ] [ --noshenanigans ] [ -v | --verbose ]
 
     -F, --file=FILE     Specify an alternative config file.
 
     -L, --logdir=DIR    Specify an alternative log directory.
+
+    -l, --log           Try to read the latest (i.e., current) log file
+                        with PAGER (defaults to `less').
 
     --help              Show this SYNOPSIS. (Uses Getopt::Long's
                         auto_help)
@@ -104,12 +107,18 @@ my %config = (
 my %opts = (
     'F|file=s' => \$config{config_file},
     'L|logdir=s' => \$config{log_dir},
+    'l|log' => \$config{view_log},
     'noexec' => \$config{noexec},
     'noshenanigans' => sub { say STDERR "Aborting..."; exit 1; },
     'v|verbose' => \$config{verbose},
 );
 
 GetOptionsFromArray(\@ARGV, %opts) or exit 1;
+
+if($config{view_log})
+{
+    view_log(\%config);
+}
 
 if(!$config{noexec})
 {
@@ -160,5 +169,21 @@ sub make_logfile_name
     my ($config, $i) = @_;
     my $fn = "$config->{log_dir}/bambot.log.$i";
     return $fn;
+}
+
+sub view_log
+{
+    my ($config) = @_;
+    my $fn = make_logfile_name($config,
+            get_latest_logfile_index($config));
+    my $pager = $ENV{PAGER} // 'less';
+    { exec($pager, '--', $fn) };
+    say STDERR "Couldn't exec pager '$pager'...",
+            " Falling back to manual STDOUT cat.";
+    open my $fh, '<', $fn or die "open: $fn: $!";
+    print map encode('UTF-8', decode('UTF-8', $_)), <$fh> or
+            warn "read: $fn: $!";
+    close $fh or die "close: $fn: $!";
+    exit 0;
 }
 
