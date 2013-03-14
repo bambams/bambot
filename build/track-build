@@ -34,4 +34,4 @@ fi;
 git add lib/Bambot/Version.pm || exit $?;
 git commit -m "Build incremented: $orig_version => $next_build." ||
         exit $?;
-git tag "v$next_build";
+git tag -f "v$next_build";
