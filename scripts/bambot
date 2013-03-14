@@ -136,16 +136,29 @@ sub reexec
 sub generate_logfile_name
 {
     my ($config) = @_;
+    my $i = get_latest_logfile_index($config);
+    my $fn = make_logfile_name($config, ++$i);
+    POSIX::close(
+            POSIX::creat($fn, 0600) or die "POSIX::create: $!") or
+            warn "POSIX::close: $!";
+    return $fn;
+}
+
+sub get_latest_logfile_index
+{
+    my ($config) = @_;
     opendir my $dh, $config->{log_dir} or
             die "opendir: $config->{log_dir}: $!";
     my $i = max map { /\.log\.([0-9]+)/ }
             grep { chomp; /\.log(?:\.[0-9]+)?$/ } readdir $dh;
     closedir $dh or warn "closedir: $!";
-    $i++;
+    return $i // 0;
+}
+
+sub make_logfile_name
+{
+    my ($config, $i) = @_;
     my $fn = "$config->{log_dir}/bambot.log.$i";
-    POSIX::close(
-            POSIX::creat($fn, 0600) or die "POSIX::create: $!") or
-            warn "POSIX::close: $!";
     return $fn;
 }
 
