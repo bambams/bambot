@@ -13,6 +13,7 @@ WriteMakefile(
             'Data::Dumper' => 0,
             'DateTime' => 0,
             'Encode' => 0,
+            'Errno::AnyString' => 0,
             'ExtUtils::MakeMaker' => 0,
             'File::Find' => 0,
             'File::Slurp' => 0,

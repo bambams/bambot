@@ -58,6 +58,7 @@ use Class::Unload;
 use Data::Dumper;
 use DateTime;
 use Encode;
+use Errno::AnyString qw/custom_errstr/;
 use File::Slurp qw(edit_file slurp);
 use IO::Handle;
 use IO::Select;
@@ -203,6 +204,29 @@ sub ctcp
 {
     my ($self, $msg) = @_;
     return "\001$msg\001";
+}
+
+sub get_nicks
+{
+    my ($self, $channel) = @_;
+
+    if($channel !~ /^[#&]/)
+    {
+        $channel = "#$channel";
+    }
+
+    my $nicks = $self->{nicks}{$channel};
+
+    unless(defined $nicks)
+    {
+        $! = custom_errstr "No nicks found for $channel.";
+        return;
+    }
+
+    $nicks = "Nicks in $channel: " .
+            join ' ', grep $nicks->{$_},  keys %$nicks;
+
+    return $nicks;
 }
 
 sub identify
@@ -382,6 +406,10 @@ sub process_client_command
     {
         $self->join_channel($1);
     }
+    elsif($command =~ m{^/list ([#&]?\w+)})
+    {
+        $self->log($self->get_nicks($1) // $!, handle => \*STDOUT);
+    }
     elsif($command =~ m{^/load$})
     {
         $self->load;
@@ -441,7 +469,21 @@ sub process_server_message
     {
         $self->pong($1);
     }
-    elsif($msg =~ /:(\S+) PRIVMSG (\S+) :?(.*)/)
+    elsif($msg =~ /^:\S+\s+353\s+$self->{nick}\s+=\s+([&#]\S+)\s+:?(.+)/)
+    {
+        my ($channel, @nicks) = ($1, map s/[@+]*(.+)/$1/r, split / /, $2);
+        $self->log(Dumper {channel=>$channel, nicks=>\@nicks},
+                verbose=>1);
+        $self->{nicks}{$channel}{$_} = 1 for @nicks;
+    }
+    elsif($msg =~ /^:(\S+)\s+(JOIN|PART)\s+([#&]\S+)/)
+    {
+        my ($ident, $command, $channel) = ($1, lc($2), $3);
+        my ($nick) = $ident =~ /([^!]+)/;
+        $self->log("$nick ($ident) ${command}ed $channel.", verbose=>1);
+        $self->{nicks}{$channel}{$nick} = $command eq 'join' ? 1 : 0;
+    }
+    elsif($msg =~ /^:(\S+) PRIVMSG (\S+) :?(.*)/)
     {
         my ($sender, $target, $msg) = ($1, $2, $3);
         my ($nick, $ident) = $sender =~ /(\S+)!~?(\S+)/;
@@ -628,6 +670,17 @@ LOG_PRIVMSG:
         {
             push @$log, $msg;
             shift @$log while @$log > 5;
+        }
+    }
+    elsif($msg =~ /^:(\S+)\s+QUIT/)
+    {
+        my ($ident, $nick) = ($1, $1 =~ /([^!]+)/);
+        $self->log("$nick ($ident) quit.", verbose=>1);
+        my $channels = $self->{nicks} or return $self;
+        for my $channel (keys %$channels)
+        {
+            my $nicks = $channels->{$channel} or next;
+            $nicks->{$nick} = 0;
         }
     }
     return $self;
