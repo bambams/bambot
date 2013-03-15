@@ -12,6 +12,7 @@ WriteMakefile(
             'Class::Unload' => 0,
             'Data::Dumper' => 0,
             'DateTime' => 0,
+            'DateTime::Format::Duration' => 0,
             'Encode' => 0,
             'Errno::AnyString' => 0,
             'ExtUtils::MakeMaker' => 0,

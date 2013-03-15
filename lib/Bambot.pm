@@ -57,6 +57,7 @@ use Bambot::Version;
 use Class::Unload;
 use Data::Dumper;
 use DateTime;
+use DateTime::Format::Duration;
 use Encode;
 use Errno::AnyString qw/custom_errstr/;
 use File::Slurp qw(edit_file slurp);
@@ -227,6 +228,32 @@ sub get_nicks
             join ' ', grep $nicks->{$_},  keys %$nicks;
 
     return $nicks;
+}
+
+sub get_uptime_str
+{
+    my ($self) = @_;
+
+    my $now = DateTime->now();
+    my $formatter = DateTime::Format::Duration->new(
+            base => $now,
+            normalize => 1,
+            pattern => "%e days %H hours %M minutes %S seconds");
+
+    my $uptime = $now - $self->{creation_date};
+    my $str = sprintf 'Up for %s.', $formatter->format_duration($uptime);
+
+    my $last_connected_date = $self->{connected_date}[-1];
+    return $str unless defined $last_connected_date;
+    my $connected_duration = $now - $last_connected_date;
+
+    return $str if DateTime::Duration->compare(
+            $uptime, $connected_duration, $now) == 0;
+
+    $str = $str . sprintf ' Last connected %s ago.',
+            $formatter->format_duration($connected_duration);
+
+    return $str;
 }
 
 sub identify
@@ -449,6 +476,10 @@ sub process_client_command
         $self->quit($msg);
         exec("$0 @{$self->{ARGV}}");
     }
+    elsif($command =~ m{^/uptime$})
+    {
+        $self->log($self->get_uptime_str());
+    }
     elsif($command =~ m{^/version$})
     {
         $self->log(Bambot::version_str(), handle => \*STDOUT);
@@ -628,6 +659,10 @@ sub process_server_message
         elsif($is_friendly && $msg eq '~sleep')
         {
             $self->privmsg($target, 'Sleep mode activated...');
+        }
+        elsif($is_friendly && $msg eq '~uptime')
+        {
+            $self->privmsg($target, $self->get_uptime_str());
         }
         elsif($is_friendly && $msg eq '~version')
         {
