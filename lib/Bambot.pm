@@ -385,6 +385,16 @@ sub new
     return $self;
 }
 
+sub nickserv_ghost
+{
+    my ($self) = @_;
+    my $pwd = $self->load_pwd();
+    if(defined $pwd && length $pwd > 0)
+    {
+        $self->privmsg('NickServ', "ghost $self->{nick} $pwd");
+    }
+}
+
 sub notice
 {
     my ($self, $target, $msg) = @_;
@@ -506,6 +516,11 @@ sub process_server_message
         $self->log(Dumper {channel=>$channel, nicks=>\@nicks},
                 verbose=>1);
         $self->{nicks}{$channel}{$_} = 1 for @nicks;
+    }
+    elsif($msg =~ /^:\S+\s+433\s+\*\s+$self->{nick}\s+
+            :Nickname is already in use./x)
+    {
+        $self->nickserv_ghost();
     }
     elsif($msg =~ /^:(\S+)\s+(JOIN|PART)\s+([#&]\S+)/)
     {
