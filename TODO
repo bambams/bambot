@@ -1,5 +1,7 @@
 # vim: ft=text tw=0 wrap
 
+* Add remind command(s) option.
+* Refactor to handle commands more modularly (e.g., figure out which command parser matches first and return a CODE ref (perhaps with bound arguments) to invoke later on to actually handle it).
 * Refactor to handle in-channel targetted messages more gracefully and without the goto. >_<
 * robust, internal logging instead of using shell and tee pipe.
 * split bambot into multiple processes.
