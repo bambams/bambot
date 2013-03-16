@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with bambot.  If not, see <http://www.gnu.org/licenses/>.
 # 
-
 use v5.016;
 use strict;
 use warnings;
@@ -31,7 +30,12 @@ my @submodules;
 
 BEGIN
 {
-    @submodules = qw/Bambot::Random Bambot::Strings Bambot::Version/;
+    @submodules = qw(
+        Bambot::Random
+        Bambot::Reminder
+        Bambot::Strings
+        Bambot::Version
+    );
 
     sub load_
     {
@@ -59,6 +63,7 @@ use Class::Unload;
 use Data::Dumper;
 use DateTime;
 use DateTime::Format::Duration;
+use DateTime::Format::Natural;
 use Encode;
 use Errno::AnyString qw/custom_errstr/;
 use File::Slurp qw(edit_file slurp);
@@ -206,6 +211,40 @@ sub ctcp
 {
     my ($self, $msg) = @_;
     return "\001$msg\001";
+}
+
+sub exec_reminders
+{
+    my ($self) = @_;
+
+    my $now = DateTime->now();
+    my $reminders = $self->{reminders_};
+    my $count = @$reminders;
+    my $quota = 3;
+    my @due = grep $_->when <= $now && $quota-- > 0, reverse @$reminders;
+
+    for (@due)
+    {
+        my ($target, $nick, $msg, $when) = (
+                    $_->target, $_->nick, $_->msg, $_->when);
+
+        $self->privmsg($target, $self->personalize($target, $nick,
+                "Reminder that it's $when: $msg"));
+    }
+
+    $self->log("<<<<<<    Due reminders    ------", verbose=>1);
+    $self->log("$_", verbose=>1) for @due;
+    $self->log("---------------------------------", verbose=>1);
+
+    @$reminders = grep !($_ ~~ \@due), @$reminders;
+
+    $self->log("$_", verbose=>1) for @$reminders;
+    $self->log(">>>>>> Remaining reminders ------", verbose=>1);
+
+    $self->log(sprintf("Executed %d/%d reminders. %d remaining...",
+            scalar @due, $count, scalar @$reminders), verbose=>1);
+
+    return @due;
 }
 
 sub fstring
@@ -386,6 +425,7 @@ sub new
         on_ => 0,
         master_nicks => [],
         random_ => Bambot::Random->new(),
+        reminders_ => [],
         selector_ => $selector,
         strings_ => Bambot::Strings->new(),
     };
@@ -493,6 +533,17 @@ sub process_client_command
     elsif($command =~ m{^/reload$})
     {
         $self->log(($self->reload)[1]);
+    }
+    elsif($command =~ m{^/remind
+            \s+(\S+)
+            \s+([#&]\w+|private)
+            \s+(\S+)
+            \s+(\S+)
+            \s+(.+)
+            }x)
+    {
+        my $remind_target = $2 eq 'private' ? $1 : $2;
+        $self->remind($remind_target, $2, $3, $4, $5) or $self->log($!);
     }
     elsif($command =~ m{^/restart$})
     {
@@ -680,6 +731,42 @@ sub process_server_message
             $self->log('Master issued ~reload...');
             $self->privmsg($target, ($self->reload)[1]);
         }
+        elsif($is_friendly && $msg =~ /^~remind
+                (?:\s+(\S+))?
+                (?:\s+([#&]\w+|private))?
+                \s+(\S+)
+                \s+(\S+)
+                \s+(.+)
+                /x)
+        {
+            my ($your_nick, $scope, $date, $time, $msg) =
+                    ($1, $2, $3, $4, $5);
+            $your_nick = $nick if ($your_nick // 'me') eq 'me';
+            $scope = $target =~ /^[#&]/ ? 'public' : 'private'
+                    unless defined $scope;
+            if($is_master || $your_nick eq $nick)
+            {
+                my $msg = $self->remind($target, $your_nick, $scope,
+                        $date, $time, $msg);
+
+                if($msg)
+                {
+                    $self->privmsg($target,
+                            $self->personalize($target, $nick, $msg));
+                }
+                else
+                {
+                    $self->privmsg($target,
+                            $self->personalize($target, $nick, $!));
+                }
+            }
+            else
+            {
+                $self->privmsg($target, $self->personalize(
+                        $target, $nick,
+                        "You can only set reminders for yourself."));
+            }
+        }
         elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/)
         {
             $self->privmsg($target, $self->personalize(
@@ -820,6 +907,28 @@ sub reload
             "reload/" . (qw/failure success/)[$status]));
 }
 
+sub remind
+{
+    my ($self, $target, $nick, $scope, $date, $time, $msg) = @_;
+    my $formatter = DateTime::Format::Natural->new();
+    my $when = $formatter->parse_datetime("$date $time");
+    unless ($formatter->success)
+    {
+        $! = custom_errstr "Invalid reminder date/time: $date $time";
+        return;
+    }
+    if(DateTime->now() >= $when)
+    {
+        $! = custom_errstr "Can't remind you about past or current events.";
+        return;
+    }
+    $target = $nick if $scope eq 'private';
+    my $reminders = \@{$self->{reminders_}};
+    push @$reminders, Bambot::Reminder->new($target, $nick, $when, $msg);
+    @$reminders = sort { $a <=> $b } @$reminders;
+    return "Reminder set for $nick at $when in $scope.";
+}
+
 sub run
 {
     my ($self) = @_;
@@ -828,58 +937,63 @@ sub run
     MAIN: while(1)
     {
         my ($sock, $selector) = @$self{qw/sock_ selector_/};
-        my @handles = $selector->can_read;
 
-        if(@handles == 0)
+        my $now = DateTime->now();
+        my $timeout;
+        my $next_reminder = $self->{reminders_}[-1];
+
+        if(defined $next_reminder && $next_reminder->when > $now)
         {
-            $self->log('I think our selector is broken...');
-            $self->reconnect();
-            next;
+            $timeout = $next_reminder->when
+                    ->subtract_datetime_absolute($now)->seconds() + 1;
+            $self->log("Sleeping for $timeout seconds...", verbose=>1);
         }
-        else
+
+        my @handles = $selector->can_read($timeout);
+
+        for my $rh (@handles)
         {
-            for my $rh (@handles)
+            my $msg = <$rh>;
+
+            unless(defined $msg)
             {
-                my $msg = <$rh>;
+                $self->log('We appear to have been disconnected...');
+                $self->reconnect();
+                next;
+            }
 
-                unless(defined $msg)
-                {
-                    $self->log('We appear to have been disconnected...');
-                    $self->reconnect();
-                    next;
-                }
+            my $now = DateTime->now();
 
-                my $now = DateTime->now();
+            $msg = decode('UTF-8', $msg);
 
-                $msg = decode('UTF-8', $msg);
+            chomp $msg;
+            $msg =~ tr/\r//d;
 
-                chomp $msg;
-                $msg =~ tr/\r//d;
+            next if $msg =~ /^\s*$/;
 
-                next if $msg =~ /^\s*$/;
-
-                if($rh == $sock)
-                {
-                    $self->log('Reading from socket...', verbose => 1);
-                    $self->process_server_message($msg, $now);
-                }
-                elsif($rh == \*STDIN)
-                {
-                    $self->log('Reading from stdin...', verbose => 1);
-                    $self->log($msg,
-                            handle => \*STDOUT,
-                            level => 'STDIN');
-                    $self->process_client_command($msg, $now) or last MAIN;
-                }
-                else
-                {
-                    $self->log('Unknown handle...', verbose => 1);
-                    print encode('UTF-8', Data::Dumper->Dump(
-                            [\*STDIN, $sock, $rh],
-                            [qw(STDIN sock rh)]));
-                }
+            if($rh == $sock)
+            {
+                $self->log('Reading from socket...', verbose => 1);
+                $self->process_server_message($msg, $now);
+            }
+            elsif($rh == \*STDIN)
+            {
+                $self->log('Reading from stdin...', verbose => 1);
+                $self->log($msg,
+                        handle => \*STDOUT,
+                        level => 'STDIN');
+                $self->process_client_command($msg, $now) or last MAIN;
+            }
+            else
+            {
+                $self->log('Unknown handle...', verbose => 1);
+                print encode('UTF-8', Data::Dumper->Dump(
+                        [\*STDIN, $sock, $rh],
+                        [qw(STDIN sock rh)]));
             }
         }
+
+        $self->exec_reminders();
     }
 
     $self->close();
