@@ -410,6 +410,12 @@ sub notice
     $self->auto_response("NOTICE $target :$msg");
 }
 
+sub personalize
+{
+    my ($self, $target, $nick, $msg) = @_;
+    return ($target eq $nick ? "" : "$nick: ") . "$msg";
+}
+
 sub privmsg
 {
     my ($self, $target, $msg) = @_;
@@ -589,8 +595,9 @@ sub process_server_message
         elsif($is_friendly &&
                 $msg eq "$self->{nick}: help")
         {
-            $self->privmsg($target,
-                    $self->fstring("$nick: %s", 'help_stub'));
+            $self->privmsg($target, $self->personalize(
+                    $target, $nick,
+                    $self->string('help_stub')));
         }
         elsif($is_friendly &&
                 $msg =~ /^\s*are\s+you\s+still\s+there\s*\?\s*$/i)
@@ -604,13 +611,16 @@ sub process_server_message
                         say\s+my\s+name[,\s]\s*
                         say\s+my\s+name\s*[\.!1]*\s*$/ix)
         {
-            $self->privmsg($target,
-                    $self->fstring("$nick: %s", 'say_my_name'));
+            $self->privmsg($target, $self->personalize(
+                    $target, $nick,
+                    $self->string('say_my_name')));
         }
         elsif($is_friendly &&
-                $msg =~ m{^bambot:?\s+.*\\o/\s*$})
+                $msg =~ m[^($self->{nick}:?\s+)?.*\\o/\s*$] &&
+                ($target eq $nick || defined $1))
         {
-            $self->privmsg($target, "$nick: \\o/");
+            $self->privmsg($target,
+                    $self->personalize($target, $nick, "\\o/"));
         }
         elsif($is_friendly && $is_substitution)
         {
@@ -636,8 +646,9 @@ sub process_server_message
                 beer|carling|budweiser|steam whistle|
                 amaretto|rum|scotch|vodka|whiskey/ix)
         {
-            $self->privmsg($target,
-                    $self->fstring("$nick: %s", 'alcholic'));
+            $self->privmsg($target, $self->personalize(
+                    $target, $nick,
+                    $self->string('alcholic')));
         }
         elsif($is_friendly && $msg =~ /^~\s+\S/)
         {
@@ -654,7 +665,8 @@ sub process_server_message
         elsif($is_master && $msg =~ /^~eval (.*)/)
         {
             my $result = "eval: $1";
-            $self->privmsg($target, "$nick: $result");
+            $self->privmsg($target,
+                    $self->personalize($target, $nick, $result));
         }
         elsif($is_master && $msg eq '~load')
         {
@@ -669,8 +681,9 @@ sub process_server_message
         }
         elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/)
         {
-            $self->privmsg($target,
-                    $self->fstring("$nick: %s", 'shutdown'));
+            $self->privmsg($target, $self->personalize(
+                    $target, $nick,
+                    $self->string('shutdown')));
             $self->quit($1 || ());
         }
         elsif($is_friendly && $msg eq '~sing')
@@ -687,8 +700,8 @@ sub process_server_message
         }
         elsif($is_friendly && $msg eq '~version')
         {
-            $self->privmsg($target,
-                    "$nick: " . Bambot::version_str());
+            $self->privmsg($target, $self->personalize($target, $nick,
+                    Bambot::version_str()));
         }
         elsif($msg =~ /\bmadness\b/i && $target =~ /^[#&]/)
         {
@@ -918,7 +931,9 @@ sub sing
     my @wannabee_lyrics = map { chomp;$_ }
             slurp $self->{lyrics_file} or do {
         warn "Failed to load lyrics file: $!";
-        $self->privmsg($target, "$nick: I can't think of any songs...");
+        $self->privmsg($target, $self->personalize(
+                $target, $nick,
+                "I can't think of any songs..."));
         return;
     };
     $self->privmsg($target,
