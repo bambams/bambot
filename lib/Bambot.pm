@@ -31,6 +31,8 @@ my @submodules;
 
 BEGIN
 {
+    @submodules = qw/Bambot::Random Bambot::Version/;
+
     sub load_
     {
         for (@submodules)
@@ -48,7 +50,6 @@ BEGIN
         }
     }
 
-    @submodules = qw/Bambot::Version/;
     load_();
 }
 
@@ -378,6 +379,7 @@ sub new
         friendly_idents => [],
         on_ => 0,
         master_nicks => [],
+        random_ => Bambot::Random->new(),
         selector_ => $selector,
     };
     bless $self, $class;
@@ -629,7 +631,7 @@ sub process_server_message
                     'Lush! >_>',
                     'Why ride the wagon when you can walk...?  ::)',
                     );
-            my $response = $self->pick_random(\@responses);
+            my $response = $self->random->pick_random(\@responses);
             $self->privmsg($target, "$nick: $response");
         }
         elsif($is_friendly && $msg =~ /^~\s+\S/)
@@ -744,11 +746,10 @@ sub quit
     $self->close();
 }
 
-sub pick_random
+sub random
 {
-    my ($self, $list) = @_;
-
-    return $list->[int rand @$list];
+    my ($self) = @_;
+    return $self->{random_};
 }
 
 sub reconnect
@@ -802,7 +803,7 @@ sub reload
         ['Upgrade complete... *click* *click* *click*' .
                 ' ...Still defective.']
     );
-    return ($status, $self->pick_random($msgs[$status]));
+    return ($status, $self->random->pick_random($msgs[$status]));
 }
 
 sub run
@@ -920,7 +921,8 @@ sub sing
         $self->privmsg($target, "$nick: I can't think of any songs...");
         return;
     };
-    $self->privmsg($target, $self->pick_random(\@wannabee_lyrics));
+    $self->privmsg($target,
+            $self->random->pick_random(\@wannabee_lyrics));
 }
 
 sub version_str
