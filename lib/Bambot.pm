@@ -709,7 +709,7 @@ sub process_server_message
             if(int rand 4 == 0)
             {
                 $self->privmsg($target,
-                        $self->string('spartaaa', channel => $target));
+                        $self->string('spartaaa', target => $target));
             }
             else
             {
