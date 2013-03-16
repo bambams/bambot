@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
         AUTHOR => 'Brandon McCaig <bamccaig@gmail.com>',
-        EXE_FILES => [qw(scripts/bambot)],
+        EXE_FILES => [qw(bin/bambot)],
         LICENSE => 'GNU GPLv2+',
         NAME => 'Bambot',
         PREREQ_PM => {

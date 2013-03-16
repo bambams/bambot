@@ -16,4 +16,4 @@ if [ ! -e "$log_dir" ]; then
     mkdir "$log_dir";
 fi;
 
-PERL5LIB=lib scripts/bambot -F"$config" -L"$log_dir";
+PERL5LIB=lib bin/bambot -F"$config" -L"$log_dir";

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-find scripts -type f;
+find bin -type f;
 find lib -name \*.pm -a -type f;
