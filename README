@@ -1,9 +1,18 @@
-Bambot - A simple IRC bot.
+Bambot - A simple^Wsarcastic IRC bot.
 
 This project is still relatively young and immature. As a result it hasn't
 been documented yet. I'm just throwing this together as a quick little
 get-you-started. I wouldn't consider it production ready, though for all
 intents and purpose I do run it "in production" for my own personal uses.
+
+=FICTION=
+
+One of the major inspirations for Bambot's sarcasm and humor are the
+sentry turrets from the Portal (i.e., Half-Life) universe. The author
+likes to imagine Bambot as being one such turret, perhaps a defective one,
+that was repurposed as an IRC bot. Of course, nothing stops multiple
+instances of bambot from being run, so one can extend this concept to all
+instances of the bot.
 
 =INSTALLATION=
 
