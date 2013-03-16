@@ -31,7 +31,7 @@ my @submodules;
 
 BEGIN
 {
-    @submodules = qw/Bambot::Random Bambot::Version/;
+    @submodules = qw/Bambot::Random Bambot::Strings Bambot::Version/;
 
     sub load_
     {
@@ -208,6 +208,12 @@ sub ctcp
     return "\001$msg\001";
 }
 
+sub fstring
+{
+    my ($self, $fmt, $key, %opts) = @_;
+    return sprintf $fmt, $self->string($key, %opts);
+}
+
 sub get_nicks
 {
     my ($self, $channel) = @_;
@@ -381,6 +387,7 @@ sub new
         master_nicks => [],
         random_ => Bambot::Random->new(),
         selector_ => $selector,
+        strings_ => Bambot::Strings->new(),
     };
     bless $self, $class;
     $self->load;
@@ -582,12 +589,13 @@ sub process_server_message
         elsif($is_friendly &&
                 $msg eq "$self->{nick}: help")
         {
-            $self->privmsg($target, "You're gonna need it.");
+            $self->privmsg($target,
+                    $self->fstring("$nick: %s", 'help_stub'));
         }
         elsif($is_friendly &&
                 $msg =~ /^\s*are\s+you\s+still\s+there\s*\?\s*$/i)
         {
-             $self->privmsg($target, "Don't shoot, it's me!");
+             $self->privmsg($target, $self->string('its_me'));
         }
         elsif($is_friendly &&
                 $msg =~
@@ -596,7 +604,8 @@ sub process_server_message
                         say\s+my\s+name[,\s]\s*
                         say\s+my\s+name\s*[\.!1]*\s*$/ix)
         {
-            $self->privmsg($target, "$nick: Fine, I'll do it.");
+            $self->privmsg($target,
+                    $self->fstring("$nick: %s", 'say_my_name'));
         }
         elsif($is_friendly &&
                 $msg =~ m{^bambot:?\s+.*\\o/\s*$})
@@ -627,17 +636,12 @@ sub process_server_message
                 beer|carling|budweiser|steam whistle|
                 amaretto|rum|scotch|vodka|whiskey/ix)
         {
-            my @responses = (
-                    'Lush! >_>',
-                    'Why ride the wagon when you can walk...?  ::)',
-                    );
-            my $response = $self->random->pick_random(\@responses);
-            $self->privmsg($target, "$nick: $response");
+            $self->privmsg($target,
+                    $self->fstring("$nick: %s", 'alcholic'));
         }
         elsif($is_friendly && $msg =~ /^~\s+\S/)
         {
-            $self->privmsg($target,
-                    q/I could tell you if I wasn't so busy. Sorry.../);
+            $self->privmsg($target, $self->string('query_stub'));
         }
         elsif($is_master && $msg eq '~activate')
         {
@@ -656,8 +660,7 @@ sub process_server_message
         {
             $self->log('Master issued ~load...');
             $self->privmsg($target,
-                    q/Nom, nom, nom, ... that's some good config!/)
-                    if $self->load;
+                    $self->string('loaded_config')) if $self->load;
         }
         elsif($is_master && $msg eq '~reload')
         {
@@ -666,7 +669,8 @@ sub process_server_message
         }
         elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/)
         {
-            $self->privmsg($target, "$nick: I don't blame you...");
+            $self->privmsg($target,
+                    $self->fstring("$nick: %s", 'shutdown'));
             $self->quit($1 || ());
         }
         elsif($is_friendly && $msg eq '~sing')
@@ -675,7 +679,7 @@ sub process_server_message
         }
         elsif($is_friendly && $msg eq '~sleep')
         {
-            $self->privmsg($target, 'Sleep mode activated...');
+            $self->privmsg($target, $self->string('sleep'));
         }
         elsif($is_friendly && $msg eq '~uptime')
         {
@@ -691,7 +695,7 @@ sub process_server_message
             if(int rand 4 == 0)
             {
                 $self->privmsg($target,
-                        "Madness? \x{02}THIS. IS. $target!!!!!11\x{0F}");
+                        $self->string('spartaaa', channel => $target));
             }
             else
             {
@@ -798,12 +802,8 @@ sub reload
         $self->log("Can't reload: $@");
         $status = 0;
     };
-    my @msgs = (
-        [q/Upgrade failed... I can't even do that right./],
-        ['Upgrade complete... *click* *click* *click*' .
-                ' ...Still defective.']
-    );
-    return ($status, $self->random->pick_random($msgs[$status]));
+    return ($status, $self->string(
+            "reload/" . (qw/failure success/)[$status]));
 }
 
 sub run
@@ -923,6 +923,18 @@ sub sing
     };
     $self->privmsg($target,
             $self->random->pick_random(\@wannabee_lyrics));
+}
+
+sub string
+{
+    my ($self, $key, %opts) = @_;
+    return $self->{strings_}->get_string($key, %opts);
+}
+
+sub strings
+{
+    my ($self, $key, %opts) = @_;
+    return $self->{strings_}->get_strings($key, %opts);
 }
 
 sub version_str
