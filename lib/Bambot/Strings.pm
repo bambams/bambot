@@ -33,7 +33,6 @@ $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;
 
 use Bambot::Random;
-
 our %strings = (
     alcoholic => [
         'Lush! >_>',
@@ -91,6 +90,14 @@ sub get_strings
     for (keys %opts)
     {
         $value =~ s/\Q%{$_}/$opts{$_}/;
+    }
+
+    my @missing_params = $value =~ /%{(\w+)}/g;
+
+    if (@missing_params)
+    {
+        die "The string '$key' requires the following parameters: " .
+                join ', ', @missing_params;
     }
 
     return $value;
