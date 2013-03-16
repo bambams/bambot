@@ -555,11 +555,12 @@ sub process_server_message
         my $log = $self->{log_}{$target}{$ident} //= [];
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
         my $ctcp = $1;
-        my $for_other_instance = 0;
+        my ($personalized_for_me, $for_other_instance) = (0, 0);
         if($msg =~ /^([^\s:]+):\s+(.*)/)
         {
             $msg = $2;
-            $for_other_instance = $1 ne $self->{nick};
+            $personalized_for_me = $1 eq $self->{nick};
+            $for_other_instance = !$personalized_for_me;
             if($for_other_instance)
             {
                 $self->log("Looks like that message was intended for $1" .
@@ -616,8 +617,8 @@ sub process_server_message
                     $self->string('say_my_name')));
         }
         elsif($is_friendly &&
-                $msg =~ m[^($self->{nick}:?\s+)?.*\\o/\s*$] &&
-                ($target eq $nick || defined $1))
+                $msg =~ m[^.*\\o/\s*$] &&
+                ($target eq $nick || $personalized_for_me))
         {
             $self->privmsg($target,
                     $self->personalize($target, $nick, "\\o/"));
