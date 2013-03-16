@@ -517,6 +517,7 @@ sub process_server_message
     elsif($msg =~ /^:(\S+) PRIVMSG (\S+) :?(.*)/)
     {
         my ($sender, $target, $msg) = ($1, $2, $3);
+        $self->add_urls($msg);
         my ($nick, $ident) = $sender =~ /(\S+)!~?(\S+)/;
         my $is_master = $ident =~ /^\Q$self->{master}\E$/;
         my $is_friendly = $self->{friendly_idents} ~~ /^\Q$ident\E$/;
@@ -548,7 +549,6 @@ sub process_server_message
                 goto LOG_PRIVMSG;
             }
         }
-        $self->add_urls($msg);
         if($is_ctcp)
         {
             $self->log("CTCP: $ctcp", verbose => 1);
