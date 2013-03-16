@@ -6,8 +6,9 @@ cd "$build_dir/.." || exit $?;
 
 source build/rc;
 
-force=n;
 bump_args=();
+force=n;
+skip_bump=n;
 
 # Parse arguments. For now, h4x.
 while [ $# -gt 0 ]; do
@@ -15,6 +16,8 @@ while [ $# -gt 0 ]; do
         force=y;
     elif [ "$1" == -G ]; then
         bump_args=("${bump_args[@]}" -G);
+    elif [ "$1" == -v ]; then
+        skip_bump=y;
     fi;
 
     shift;
@@ -29,13 +32,15 @@ if [ $errno != 0 ]; then
     exit $errno;
 fi;
 
-./build/bump-build "${bump_args[@]}";
-errno=$?;
+if [ "$skip_bump" == n ]; then
+    ./build/bump-build "${bump_args[@]}";
+    errno=$?;
 
-version="$(get-version)" || exit $?;
+    version="$(get-version)" || exit $?;
 
-if [ $errno != 0 ]; then
-    echo "Build staying at same version: $version" 1>&2;
+    if [ $errno != 0 ]; then
+        echo "Build staying at same version: $version" 1>&2;
+    fi;
 fi;
 
 dist="$(get-dist)" || exit $?;
