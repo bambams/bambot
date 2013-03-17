@@ -933,7 +933,8 @@ sub remind {
     }
 
     if(DateTime->now() >= $when) {
-        $! = custom_errstr "Can't remind you about past or current events.";
+        $! = custom_errstr
+                "Can't remind you about past or current events.";
 
         return;
     }
@@ -1037,7 +1038,9 @@ sub send {
         $self->log('The socket appears to be dead.');
 
         if($self->clearerr == -1) {
-            $self->log('Yep, definitely dead. -_- Attempting to reconnect...');
+            $self->log('Yep, definitely dead. -_-' .
+                    ' Attempting to reconnect...');
+
             $self->reconnect();
 
             return $self;
