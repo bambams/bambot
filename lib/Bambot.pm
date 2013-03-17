@@ -556,6 +556,12 @@ sub process_client_command
     {
         $self->log($self->get_uptime_str());
     }
+    elsif($command =~ m{^/verbose(?:\s+(on|off|1|0|yes|no|true|false))?})
+    {
+        $self->{verbose} = $1 =~ /^(?:on|1|yes|true)$/ if defined $1;
+        $self->log(sprintf "verbose: %s",
+                $self->{verbose} ? "yes" : "no");
+    }
     elsif($command =~ m{^/version$})
     {
         $self->log(Bambot::version_str(), handle => \*STDOUT);
