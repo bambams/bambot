@@ -778,13 +778,8 @@ sub process_server_message {
                 my $msg = $self->remind($target, $your_nick, $scope,
                         $date, $time, $msg);
 
-                if($msg) {
-                    $self->privmsg($target,
-                            $self->personalize($target, $nick, $msg));
-                } else {
-                    $self->privmsg($target,
-                            $self->personalize($target, $nick, $!));
-                }
+                $self->privmsg($target,
+                        $self->personalize($target, $nick, $msg// $!));
             } else {
                 $self->privmsg($target, $self->personalize(
                         $target, $nick,
