@@ -39,8 +39,8 @@ sub equals($$)
 
     return $lhs->msg eq $rhs->msg &&
             $lhs->nick eq $rhs->nick &&
-            $lhs->when == $rhs->when &&
-            $lhs->msg eq $rhs->msg;
+            $lhs->target eq $rhs->target &&
+            $lhs->when == $rhs->when;
 }
 
 sub new($$$$$)
