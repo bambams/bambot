@@ -431,6 +431,27 @@ sub ls
                 return;
             }
         }
+        when ('reminders')
+        {
+            my ($nick) = $params =~ /^(\S+)/;
+            unless(defined $nick)
+            {
+                $! = custom_errstr "Invalid arguments: $params";
+                return;
+            };
+            my @reminders = map "$_", grep $_->nick eq $nick,
+                    @{$self->{reminders_}};
+            if(@reminders)
+            {
+                unshift @reminders, "Remaining reminders for $nick:";
+                return @reminders;
+            }
+            else
+            {
+                $! = custom_errstr "No reminders found for $nick.";
+                return;
+            }
+        }
     }
 }
 
@@ -523,7 +544,7 @@ sub process_client_command
     {
         $self->load;
     }
-    elsif($command =~ m{^/ls\s+(nicks)\s*(.*)})
+    elsif($command =~ m{^/ls\s+(nicks|reminders)\s*(.*)})
     {
         my @lines = $self->ls($1, $2);
         if (@lines)
@@ -760,6 +781,25 @@ sub process_server_message
             $self->log('Master issued ~load...');
             $self->privmsg($target,
                     $self->string('loaded_config')) if $self->load;
+        }
+        elsif($is_friendly && $msg =~ /^~ls\s+(reminders)\b/)
+        {
+            my @lines = $self->ls($1, $nick);
+            if (@lines)
+            {
+                if (@lines > 4)
+                {
+                    $target = $nick;
+                }
+                $self->privmsg($target,
+                        $self->personalize($target, $nick, $_))
+                        for @lines;
+            }
+            else
+            {
+                $self->privmsg($target,
+                        $self->personalize($target, $nick, $!));
+            }
         }
         elsif($is_master && $msg eq '~reload')
         {
