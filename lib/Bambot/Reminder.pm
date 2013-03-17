@@ -54,9 +54,12 @@ sub new($$$$$)
 sub to_string($)
 {
     my ($self) = @_;
+
+    my ($t, $n) = ($self->target, $self->nick);
+
     return sprintf "In %s to %s on %s about '%s'",
-            $self->target,
-            $self->nick,
+            ($t eq $n ? 'private' : $t),
+            $n,
             $self->when,
             $self->msg;
 }
