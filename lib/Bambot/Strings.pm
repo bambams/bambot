@@ -87,7 +87,7 @@ sub get_strings {
 
     my @missing_params = $value =~ /%{(\w+)}/g;
 
-    if (@missing_params) {
+    if(@missing_params) {
         die "The string '$key' requires the following parameters: " .
                 join ', ', @missing_params;
     }

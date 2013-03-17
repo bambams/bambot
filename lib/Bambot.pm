@@ -429,7 +429,7 @@ sub ls {
     my ($self, $what, $params) = @_;
 
     for ($what) {
-        when ('nicks') {
+        when('nicks') {
             if($params =~ /^([#&]\w+)/) {
                 return $self->get_nicks($1);
             } else {
@@ -439,7 +439,7 @@ sub ls {
             }
         }
 
-        when ('reminders') {
+        when('reminders') {
             my ($nick) = $params =~ /^(\S+)/;
 
             unless(defined $nick) {
@@ -547,7 +547,7 @@ sub process_client_command {
     } elsif($command =~ m{^/ls\s+(nicks|reminders)\s*(.*)}) {
         my @lines = $self->ls($1, $2);
 
-        if (@lines) {
+        if(@lines) {
             $self->log($_, handle => \*STDOUT) for @lines;
         } else {
             $self->log($!);
@@ -743,8 +743,8 @@ sub process_server_message {
         } elsif($is_friendly && $msg =~ /^~ls\s+(reminders)\b/) {
             my @lines = $self->ls($1, $nick);
 
-            if (@lines) {
-                if (@lines > 4) {
+            if(@lines) {
+                if(@lines > 4) {
                     $target = $nick;
                 }
 
@@ -923,7 +923,7 @@ sub remind {
     my $formatter = DateTime::Format::Natural->new();
     my $when = $formatter->parse_datetime("$date $time");
 
-    unless ($formatter->success) {
+    unless($formatter->success) {
         $! = custom_errstr "Invalid reminder date/time: $date $time";
 
         return;
