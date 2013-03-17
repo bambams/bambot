@@ -929,7 +929,7 @@ sub remind
         return;
     }
     $target = $nick if $scope eq 'private';
-    my $reminders = \@{$self->{reminders_}};
+    my $reminders = $self->{reminders_};
     push @$reminders, Bambot::Reminder->new($target, $nick, $when, $msg);
     @$reminders = sort { $a <=> $b } @$reminders;
     return "Reminder set for $nick at $when in $scope.";
