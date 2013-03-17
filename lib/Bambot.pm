@@ -23,6 +23,12 @@ use warnings;
 use version;
 use utf8;
 
+use constant {
+    DEFAULT_NICK => 'bambot',
+    DEFAULT_REALNAME => 'Unknown',
+    DEFAULT_USERNAME => 'unknown',
+};
+
 package Bambot;
 
 our ($EST, $VERSION);
@@ -884,9 +890,10 @@ sub reconnect {
 
 sub register {
     my ($self) = @_;
-    my $nick = $self->{nick} // 'bambot' . int rand 99;
-    my $user = $self->{username} // $ENV{USER} // 'unknown' . rand(99);
-    my $real_name = $self->{real_name} // 'Unknown';
+    my $i = int rand 99;
+    my $nick = $self->{nick} // DEFAULT_NICK() . $i;
+    my $user = $self->{username} // $ENV{USER} // DEFAULT_USERNAME() . $i;
+    my $real_name = $self->{real_name} // DEFAULT_REALNAME();
 
     $self->set_nick($self->{nick});
 
