@@ -97,12 +97,12 @@ sub _is_substitution {
                 /x &&
                 $1 ne $2) {
             $$substitution_ref = {
-                    opener => $opener,
-                    closer => $closer,
-                    pattern => $1,
-                    replacement => $2,
-                    global => defined $3,
-                    };
+                opener => $opener,
+                closer => $closer,
+                pattern => $1,
+                replacement => $2,
+                global => defined $3,
+            };
 
             return 1;
         }
