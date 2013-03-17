@@ -954,7 +954,8 @@ sub run {
 
     $self->log(Bambot::version_str(), handle => \*STDOUT);
 
-    MAIN: while(1) {
+MAIN:
+    while(1) {
         my ($sock, $selector) = @$self{qw/sock_ selector_/};
 
         my $now = DateTime->now();
