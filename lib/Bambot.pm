@@ -342,6 +342,7 @@ sub join_channel {
 
     @channels = map $_ =~ s/^([^&#])/#$1/r, @channels;
 
+    # Note: Refactor: this should be returned instead of auto_response.
     $self->auto_response("JOIN $_") for @channels;
 
     return $self;
