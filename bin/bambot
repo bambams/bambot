@@ -75,14 +75,12 @@ use Getopt::Long qw/GetOptionsFromArray
         no_getopt_compat no_ignore_case_always no_require_order permute/;
 use List::Util qw(max);
 
-BEGIN
-{
+BEGIN {
     our $VERSION = $Bambot::VERSION;
 }
 
 # Lets be a little evil here.
-if($< == 0 || $> == 0)
-{
+if($< == 0 || $> == 0) {
     $SIG{INT} = sub {
         die "\rGLaDOS mode deactivated. No files should have been removed.
 Please do not run Bambot as root. >:)";
@@ -116,13 +114,11 @@ my %opts = (
 
 GetOptionsFromArray(\@ARGV, %opts) or exit 1;
 
-if($config{view_log})
-{
+if($config{view_log}) {
     view_log(\%config);
 }
 
-if(!$config{noexec})
-{
+if(!$config{noexec}) {
     reexec(\%config);
 }
 
@@ -136,8 +132,7 @@ BEGIN {
     };
 }
 
-sub reexec
-{
+sub reexec {
     my ($config) = @_;
     my $fn = generate_logfile_name($config);
 
@@ -157,8 +152,7 @@ sub generate_logfile_name
     return $fn;
 }
 
-sub get_latest_logfile_index
-{
+sub get_latest_logfile_index {
     my ($config) = @_;
 
     opendir my $dh, $config->{log_dir} or
@@ -172,16 +166,14 @@ sub get_latest_logfile_index
     return $i // 0;
 }
 
-sub make_logfile_name
-{
+sub make_logfile_name {
     my ($config, $i) = @_;
     my $fn = "$config->{log_dir}/bambot.log.$i";
 
     return $fn;
 }
 
-sub view_log
-{
+sub view_log {
     my ($config) = @_;
     my $fn = make_logfile_name($config,
             get_latest_logfile_index($config));

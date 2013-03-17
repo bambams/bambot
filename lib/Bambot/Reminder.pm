@@ -20,22 +20,19 @@ use Encode;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;
 
-sub compare_
-{
+sub compare_ {
     my ($lhs, $rhs) = @_;
 
     return $lhs->when <=> $rhs->when;
 }
 
-sub smart_match_
-{
+sub smart_match_ {
     my ($lhs, $rhs) = @_;
 
     return $lhs == $rhs;
 }
 
-sub equals($$)
-{
+sub equals($$) {
     my ($lhs, $rhs) = @_;
 
     return $lhs->msg eq $rhs->msg &&
@@ -44,8 +41,7 @@ sub equals($$)
             $lhs->when == $rhs->when;
 }
 
-sub new($$$$$)
-{
+sub new($$$$$) {
     my ($class, $target, $nick, $when, $msg) = @_;
     my $self = [$msg, $nick, $target, $when];
 
@@ -54,8 +50,7 @@ sub new($$$$$)
     return $self;
 }
 
-sub to_string($)
-{
+sub to_string($) {
     my ($self) = @_;
 
     my ($t, $n) = ($self->target, $self->nick);

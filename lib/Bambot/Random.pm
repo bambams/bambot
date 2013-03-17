@@ -32,16 +32,14 @@ use Encode;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;
 
-sub new
-{
+sub new {
     my ($class) = @_;
     my $self = bless {}, $class;
 
     return $self;
 }
 
-sub pick_random
-{
+sub pick_random {
     my ($self, $list) = @_;
 
     return $list->[int rand @$list];

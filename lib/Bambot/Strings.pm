@@ -53,23 +53,19 @@ our %strings = (
     shutdown => q/I don't blame you.../,
 );
 
-sub get_string
-{
+sub get_string {
     my ($self, $key) = @_;
 
     return scalar $self->get_strings($key);
 }
 
-sub get_strings
-{
+sub get_strings {
     my ($self, $key, %opts) = @_;
     my $value = \%strings;
     my @keys = split m{\W+}, $key;
 
-    for (@keys)
-    {
-        if(ref $value ne 'HASH' || ! defined $value->{$_})
-        {
+    for (@keys) {
+        if(ref $value ne 'HASH' || ! defined $value->{$_}) {
             warn "Invalid string: $key";
             return;
         }
@@ -77,27 +73,21 @@ sub get_strings
         $value = $value->{$_};
     }
 
-    if(ref $value eq 'ARRAY')
-    {
-        if(wantarray)
-        {
+    if(ref $value eq 'ARRAY') {
+        if(wantarray) {
             return @$value;
-        }
-        else
-        {
+        } else {
             $value = $self->{random}->random_pick($value);
         }
     }
 
-    for (keys %opts)
-    {
+    for (keys %opts) {
         $value =~ s/\Q%{$_}/$opts{$_}/;
     }
 
     my @missing_params = $value =~ /%{(\w+)}/g;
 
-    if (@missing_params)
-    {
+    if (@missing_params) {
         die "The string '$key' requires the following parameters: " .
                 join ', ', @missing_params;
     }
@@ -105,8 +95,7 @@ sub get_strings
     return $value;
 }
 
-sub new
-{
+sub new {
     my ($class) = @_;
     my $self = {
         random => Bambot::Random->new(),
