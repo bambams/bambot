@@ -340,10 +340,7 @@ sub init {
 sub join_channel {
     my ($self, @channels) = @_;
 
-    @channels = map {
-        (my $channel = $_) =~ s/^([^&#])/#$1/;
-        $channel
-    } @channels;
+    @channels = map $_ =~ s/^([^&#])/#$1/r, @channels;
 
     $self->auto_response("JOIN $_") for @channels;
 
