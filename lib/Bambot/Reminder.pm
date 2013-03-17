@@ -30,6 +30,7 @@ sub compare_
 sub smart_match_
 {
     my ($lhs, $rhs) = @_;
+
     return $lhs == $rhs;
 }
 
@@ -47,7 +48,9 @@ sub new($$$$$)
 {
     my ($class, $target, $nick, $when, $msg) = @_;
     my $self = [$msg, $nick, $target, $when];
+
     bless $self, $class;
+
     return $self;
 }
 

@@ -36,6 +36,7 @@ sub new
 {
     my ($class) = @_;
     my $self = bless {}, $class;
+
     return $self;
 }
 

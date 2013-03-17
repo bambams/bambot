@@ -76,10 +76,13 @@ sub _is_substitution
 {
     my ($self, $msg, $substitution_ref) = @_;
     my %pairs = qw/{ } ( ) [ ] < >/;
+
     undef $$substitution_ref;
+
     for my $opener (keys %pairs)
     {
         my $closer = $pairs{$opener};
+
         if($msg =~ /
                 ^
                 s
@@ -101,9 +104,11 @@ sub _is_substitution
                     replacement => $2,
                     global => defined $3,
                     };
+
             return 1;
         }
     }
+
     if($msg =~ m{^s([^a-zA-Z0-9])([^\1]+)\1([^\1]*)\1(g)?$} &&
             $2 ne $3)
     {
@@ -113,8 +118,10 @@ sub _is_substitution
             replacement => $3,
             global => defined $4
         };
+
         return 1;
     }
+
     return;
 }
 
@@ -122,16 +129,20 @@ sub add_urls
 {
     my ($self, $msg) = @_;
     my @urls = $msg =~ m{\b(https?://[-A-Za-z0-9_\.:/\?=%\&]+)}gi;
+
     if(@urls)
     {
         # File::Slurp::edit_file is resetting permissions. Need to
         # temporarily change umask so read permissions are not removed
         # from group and others.
         my $orig_umask = umask 033 or warn "Failed to modify umask";
+
         edit_file {
             my @lines = grep { /^http/ } split /^/m;
+
             push @lines, map { "$_\n" } @urls;
             shift @lines while @lines > 5;
+
             $_ = <<'EOF' . join '', @lines;
 # This file is automatically written by Bambot, an IRC bot. The following
 # lines are things that looked like HTTP and HTTPS URIs in an IRC channel
@@ -152,6 +163,7 @@ sub add_urls
 
 EOF
         } $self->{url_file};
+
         umask $orig_umask or warn "Failed to restore umask";
     }
 }
@@ -159,19 +171,25 @@ EOF
 sub auto_response
 {
     my ($self, @responses) = @_;
+
     $self->send(@responses);
+
     my $now = DateTime->now();
+
     for (@responses)
     {
         $self->log($_, handle => \*STDOUT, level => 'AUTO');
     }
+
     return $self;
 }
 
 sub connect
 {
     my ($self) = @_;
+
     $self->log("Connecting to $self->{host}:$self->{port}...");
+
     my $sock = IO::Socket::INET->new(
             PeerAddr => $self->{host},
             PeerPort => $self->{port},
@@ -181,9 +199,12 @@ sub connect
     if($sock)
     {
         binmode $sock;
+
         $self->{on_} = 1;
         $self->{sock_} = $sock;
+
         $self->{selector_}->add($sock);
+
         push @{$self->{connected_date}}, DateTime->now();
     }
 
@@ -194,22 +215,29 @@ sub connect
 sub close
 {
     my ($self) = @_;
+
     $self->log("Closing connection...");
+
     my $sock = $self->{sock_};
+
     if(defined $sock)
     {
         $self->{selector_}->remove($sock);
         $sock->close();
+
         delete $self->{sock_};
         push @{$self->{disconnected_date}}, DateTime->now();
     }
+
     $self->{on_} = 0;
+
     return $self;
 }
 
 sub ctcp
 {
     my ($self, $msg) = @_;
+
     return "\001$msg\001";
 }
 
@@ -250,6 +278,7 @@ sub exec_reminders
 sub fstring
 {
     my ($self, $fmt, $key, %opts) = @_;
+
     return sprintf $fmt, $self->string($key, %opts);
 }
 
@@ -290,7 +319,9 @@ sub get_uptime_str
     my $str = sprintf 'Up for %s.', $formatter->format_duration($uptime);
 
     my $last_connected_date = $self->{connected_date}[-1];
+
     return $str unless defined $last_connected_date;
+
     my $connected_duration = $now - $last_connected_date;
 
     return $str if DateTime::Duration->compare(
@@ -306,16 +337,19 @@ sub identify
 {
     my ($self) = @_;
     my $pwd = $self->load_pwd();
+
     if(defined $pwd && length $pwd > 0)
     {
         $self->privmsg('NickServ', "identify $pwd");
     }
+
     return $self;
 }
 
 sub init
 {
     my ($self) = @_;
+
     if(defined $self->{sock_})
     {
         $self->log('Initializing...');
@@ -326,40 +360,52 @@ sub init
     {
         $self->log('Cannot init... Socket undefined.');
     }
+
     return $self;
 }
 
 sub join_channel
 {
     my ($self, @channels) = @_;
+
     @channels = map {
         (my $channel = $_) =~ s/^([^&#])/#$1/;
         $channel
     } @channels;
+
     $self->auto_response("JOIN $_") for @channels;
+
     return $self;
 }
 
 sub load
 {
     my ($self) = @_;
+
     open my $fh, '<', $self->{config_file} or return 0;
+
     my $mode = (stat $fh)[2];
+
     die sprintf 'Insecure config permissions: %04o', $mode & 0777
             if ($mode & 0177) != 0;
+
     while(my $line = decode('UTF-8', <$fh>))
     {
         next if $line =~ /^\s*(#|$)/;
+
         chomp $line;
+
         if($line =~ /^(\w+)\s*=\s*(.*)/)
         {
             my $type = ref $self->{$1};
             my @values = split ' ', $2;
             my $append = @values && substr($values[0], 0, 1) eq '+';
+
             if($append)
             {
                 $values[0] = substr($values[0], 1);
             }
+
             if($type eq 'ARRAY')
             {
                 if($append)
@@ -376,6 +422,7 @@ sub load
                 if($append)
                 {
                     my %values = @values;
+
                     @{$self->{$1}}{keys %values} = values %values;
                 }
                 else
@@ -387,17 +434,23 @@ sub load
             {
                 $self->{$1} = $2;
             }
+
             next;
         }
+
         warn "invalid config: $line";
     }
+
     $fh->close or warn "close: $!";
+
     delete $self->{password};
+
     return $self;
 }
 
 sub load_pwd {
     my ($self) = @_;
+
     (map { /[^=]+=\s*(.*)/ and $1 or () } grep /^password\s*=/,
             slurp($self->{config_file}))[-1];
 }
@@ -405,11 +458,16 @@ sub load_pwd {
 sub log
 {
     my ($self, $message, %opts) = @_;
+
     return if $opts{verbose} && !$self->{verbose};
+
     $opts{handle} //= \*STDERR;
     $opts{level} //= 'DIAGNOSTIC';
+
     my $now = DateTime->now();
+
     $opts{handle}->say("$now $opts{level}: $message");
+
     return $self;
 }
 
@@ -428,27 +486,35 @@ sub ls
             else
             {
                 $! = custom_errstr "Invalid arguments: $params";
+
                 return;
             }
         }
+
         when ('reminders')
         {
             my ($nick) = $params =~ /^(\S+)/;
+
             unless(defined $nick)
             {
                 $! = custom_errstr "Invalid arguments: $params";
+
                 return;
             };
+
             my @reminders = map "$_", grep $_->nick eq $nick,
                     @{$self->{reminders_}};
+
             if(@reminders)
             {
                 unshift @reminders, "Remaining reminders for $nick:";
+
                 return @reminders;
             }
             else
             {
                 $! = custom_errstr "No reminders found for $nick.";
+
                 return;
             }
         }
@@ -459,6 +525,7 @@ sub new
 {
     my ($class, $config) = @_;
     my $selector = IO::Select->new(\*STDIN);
+
     my $self = {
         %$config,
         channels => [],
@@ -471,8 +538,11 @@ sub new
         selector_ => $selector,
         strings_ => Bambot::Strings->new(),
     };
+
     bless $self, $class;
+
     $self->load;
+
     return $self;
 }
 
@@ -480,6 +550,7 @@ sub nickserv_ghost
 {
     my ($self) = @_;
     my $pwd = $self->load_pwd();
+
     if(defined $pwd && length $pwd > 0)
     {
         $self->privmsg('NickServ', "ghost $self->{nick} $pwd");
@@ -489,31 +560,37 @@ sub nickserv_ghost
 sub notice
 {
     my ($self, $target, $msg) = @_;
+
     $self->auto_response("NOTICE $target :$msg");
 }
 
 sub personalize
 {
     my ($self, $target, $nick, $msg) = @_;
+
     return ($target eq $nick ? "" : "$nick: ") . "$msg";
 }
 
 sub privmsg
 {
     my ($self, $target, $msg) = @_;
+
     $self->auto_response("PRIVMSG $target :$msg");
 }
 
 sub pong
 {
     my ($self, @servers) = @_;
+
     $self->auto_response("PONG @servers");
+
     return $self;
 }
 
 sub process_client_command
 {
     my ($self, $command, $time) = @_;
+
     if($command =~ m{^/ctcp (\S+) (.+)})
     {
         $self->privmsg($1, $self->ctcp($2));
@@ -521,11 +598,13 @@ sub process_client_command
     elsif($command =~ m{^/eval (.+)})
     {
         my @results = eval $1 or warn $@;
+
         print encode('UTF-8', Dumper \@results);
     }
     elsif($command =~ m{^/(exit|x)(?:\s+(.+))?})
     {
         $self->quit($2);
+
         return 0;
     }
     elsif($command =~ m{^/identify$})
@@ -547,6 +626,7 @@ sub process_client_command
     elsif($command =~ m{^/ls\s+(nicks|reminders)\s*(.*)})
     {
         my @lines = $self->ls($1, $2);
+
         if (@lines)
         {
             $self->log($_, handle => \*STDOUT) for @lines;
@@ -593,13 +673,16 @@ sub process_client_command
             }x)
     {
         my $remind_target = $2 eq 'private' ? $1 : $2;
+
         $self->remind($remind_target, $2, $3, $4, $5) or $self->log($!);
     }
     elsif($command =~ m{^/restart$})
     {
         my $msg = 'Restarting ...';
+
         $self->log($msg);
         $self->quit($msg);
+
         exec("$0 @{$self->{ARGV}}");
     }
     elsif($command =~ m{^/uptime$})
@@ -609,6 +692,7 @@ sub process_client_command
     elsif($command =~ m{^/verbose(?:\s+(on|off|1|0|yes|no|true|false))?})
     {
         $self->{verbose} = $1 =~ /^(?:on|1|yes|true)$/ if defined $1;
+
         $self->log(sprintf "verbose: %s",
                 $self->{verbose} ? "yes" : "no");
     }
@@ -621,13 +705,16 @@ sub process_client_command
         $self->log("Unknown command: $command");
         $self->log('Use /quit to quit. Use /irc for raw IRC.');
     }
+
     return $self;
 }
 
 sub process_server_message
 {
     my ($self, $msg, $time) = @_;
+
     $self->log($msg, handle => \*STDOUT, level => 'SERVER');
+
     if($msg =~ /^PING :?([\w\.]+)/)
     {
         $self->pong($1);
@@ -635,8 +722,10 @@ sub process_server_message
     elsif($msg =~ /^:\S+\s+353\s+$self->{nick}\s+=\s+([&#]\S+)\s+:?(.+)/)
     {
         my ($channel, @nicks) = ($1, map s/[@+]*(.+)/$1/r, split / /, $2);
+
         $self->log(Dumper {channel=>$channel, nicks=>\@nicks},
                 verbose=>1);
+
         $self->{nicks}{$channel}{$_} = 1 for @nicks;
     }
     elsif($msg =~ /^:\S+\s+433\s+\*\s+$self->{nick}\s+
@@ -648,34 +737,44 @@ sub process_server_message
     {
         my ($ident, $command, $channel) = ($1, lc($2), $3);
         my ($nick) = $ident =~ /([^!]+)/;
+
         $self->log("$nick ($ident) ${command}ed $channel.", verbose=>1);
+
         $self->{nicks}{$channel}{$nick} = $command eq 'join' ? 1 : 0;
     }
     elsif($msg =~ /^:(\S+) PRIVMSG (\S+) :?(.*)/)
     {
         my ($sender, $target, $msg) = ($1, $2, $3);
+
         $self->add_urls($msg);
+
         my ($nick, $ident) = $sender =~ /(\S+)!~?(\S+)/;
         my $is_master = $ident =~ /^\Q$self->{master}\E$/;
         my $is_friendly = $self->{friendly_idents} ~~ /^\Q$ident\E$/;
+
         $target = $target eq $self->{nick} ? $nick : $target;
+
         my $log = $self->{log_}{$target}{$ident} //= [];
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
         my $ctcp = $1;
         my ($personalized_for_me, $for_other_instance) = (0, 0);
+
         if($msg =~ /^([^\s:]+):\s+(.*)/)
         {
             $msg = $2;
             $personalized_for_me = $1 eq $self->{nick};
             $for_other_instance = !$personalized_for_me;
+
             if($for_other_instance)
             {
                 $self->log("Looks like that message was intended for $1" .
                         ", not me ($self->{nick}).");
             }
         }
+
         my $is_substitution = $self->_is_substitution($msg,
                 \(my $substitution));
+
         if($for_other_instance)
         {
             if($msg =~ /^~/)
@@ -687,9 +786,11 @@ sub process_server_message
                 goto LOG_PRIVMSG;
             }
         }
+
         if($is_ctcp)
         {
             $self->log("CTCP: $ctcp", verbose => 1);
+
             if($ctcp eq 'VERSION')
             {
                 $self->notice($nick,
@@ -737,6 +838,7 @@ sub process_server_message
             {
                 my ($pat, $rep, $glob) = @$substitution{
                         qw(pattern replacement global)};
+
                 if($glob)
                 {
                     $$old_msg_ref =~ s/$pat/\x02$rep\x0F/g;
@@ -745,6 +847,7 @@ sub process_server_message
                 {
                     $$old_msg_ref =~ s/$pat/\x02$rep\x0F/;
                 }
+
                 $self->privmsg($target,
                         "$nick meant to say: $$old_msg_ref");
             }
@@ -773,24 +876,28 @@ sub process_server_message
         elsif($is_master && $msg =~ /^~eval (.*)/)
         {
             my $result = "eval: $1";
+
             $self->privmsg($target,
                     $self->personalize($target, $nick, $result));
         }
         elsif($is_master && $msg eq '~load')
         {
             $self->log('Master issued ~load...');
+
             $self->privmsg($target,
                     $self->string('loaded_config')) if $self->load;
         }
         elsif($is_friendly && $msg =~ /^~ls\s+(reminders)\b/)
         {
             my @lines = $self->ls($1, $nick);
+
             if (@lines)
             {
                 if (@lines > 4)
                 {
                     $target = $nick;
                 }
+
                 $self->privmsg($target,
                         $self->personalize($target, $nick, $_))
                         for @lines;
@@ -804,6 +911,7 @@ sub process_server_message
         elsif($is_master && $msg eq '~reload')
         {
             $self->log('Master issued ~reload...');
+
             $self->privmsg($target, ($self->reload)[1]);
         }
         elsif($is_friendly && $msg =~ /^~remind
@@ -816,9 +924,12 @@ sub process_server_message
         {
             my ($your_nick, $scope, $date, $time, $msg) =
                     ($1, $2, $3, $4, $5);
+
             $your_nick = $nick if ($your_nick // 'me') eq 'me';
+
             $scope = $target =~ /^[#&]/ ? 'public' : 'private'
                     unless defined $scope;
+
             if($is_master || $your_nick eq $nick)
             {
                 my $msg = $self->remind($target, $your_nick, $scope,
@@ -847,6 +958,7 @@ sub process_server_message
             $self->privmsg($target, $self->personalize(
                     $target, $nick,
                     $self->string('shutdown')));
+
             $self->quit($1 || ());
         }
         elsif($is_friendly && $msg eq '~sing')
@@ -883,9 +995,11 @@ sub process_server_message
             $self->log("Unrecognized user input from $nick: {{{$msg}}}",
                     verbose => 1);
         }
+
         if(!$is_ctcp && $msg eq '\\o/')
         {
             $self->{'\\o/'}++;
+
             if($self->{'\\o/'} > 1 && !$self->{'\\o/ed'})
             {
                 $self->privmsg($target, '\\o/');
@@ -897,6 +1011,7 @@ sub process_server_message
             $self->{'\\o/'} = 0;
             $self->{'\\o/ed'} = 0;
         }
+
 LOG_PRIVMSG:
         unless($is_ctcp || $is_substitution)
         {
@@ -907,21 +1022,28 @@ LOG_PRIVMSG:
     elsif($msg =~ /^:(\S+)\s+QUIT/)
     {
         my ($ident, $nick) = ($1, $1 =~ /([^!]+)/);
+
         $self->log("$nick ($ident) quit.", verbose=>1);
+
         my $channels = $self->{nicks} or return $self;
+
         for my $channel (keys %$channels)
         {
             my $nicks = $channels->{$channel} or next;
+
             $nicks->{$nick} = 0;
         }
     }
+
     return $self;
 }
 
 sub quit
 {
     my ($self, $msg) = @_;
+
     $msg //= 'Shutting down...';
+
     $self->auto_response("QUIT :$msg");
     $self->close();
 }
@@ -929,21 +1051,26 @@ sub quit
 sub random
 {
     my ($self) = @_;
+
     return $self->{random_};
 }
 
 sub reconnect
 {
     my ($self) = @_;
+
     return $self unless $self->{on_};
+
     $self->log('Reconnecting...');
     $self->close();
     $self->connect();
     $self->init();
+
     if(defined $self->{sock_} and @{$self->{master_nicks}})
     {
         $self->privmsg($self->{master_nicks}[0], 'Reconnected...');
     }
+
     return $self;
 }
 
@@ -953,8 +1080,11 @@ sub register
     my $nick = $self->{nick} // 'bambot' . int rand 99;
     my $user = $self->{username} // $ENV{USER} // 'unknown' . rand(99);
     my $real_name = $self->{real_name} // 'Unknown';
+
     $self->set_nick($self->{nick});
+
     $self->auto_response("USER $user 0 0 :$real_name");
+
     $self->identify();
 
     return $self;
@@ -963,14 +1093,19 @@ sub register
 sub reload
 {
     my ($self) = @_;
+
     $self->log('Reloading module...');
+
     my $pkg = __PACKAGE__;
     my $status;
+
     if(eval "require $pkg" && !$@)
     {
         unload_();
         Class::Unload->unload($pkg);
+
         eval "require $pkg";
+
         $status = !$@;
     }
     else
@@ -978,6 +1113,7 @@ sub reload
         $self->log("Can't reload: $@");
         $status = 0;
     };
+
     return ($status, $self->string(
             "reload/" . (qw/failure success/)[$status]));
 }
@@ -987,28 +1123,40 @@ sub remind
     my ($self, $target, $nick, $scope, $date, $time, $msg) = @_;
     my $formatter = DateTime::Format::Natural->new();
     my $when = $formatter->parse_datetime("$date $time");
+
     unless ($formatter->success)
     {
         $! = custom_errstr "Invalid reminder date/time: $date $time";
+
         return;
     }
+
     if(DateTime->now() >= $when)
     {
         $! = custom_errstr "Can't remind you about past or current events.";
+
         return;
     }
+
     $target = $nick if $scope eq 'private';
+
     my $reminders = $self->{reminders_};
+
     push @$reminders, Bambot::Reminder->new($target, $nick, $when, $msg);
+
     @$reminders = sort { $a <=> $b } @$reminders;
+
     return "Reminder set for $nick at $when in $scope.";
 }
 
 sub run
 {
     my ($self) = @_;
+
     STDOUT->autoflush(1);
+
     $self->log(Bambot::version_str(), handle => \*STDOUT);
+
     MAIN: while(1)
     {
         my ($sock, $selector) = @$self{qw/sock_ selector_/};
@@ -1021,6 +1169,7 @@ sub run
         {
             $timeout = $next_reminder->when
                     ->subtract_datetime_absolute($now)->seconds() + 1;
+
             $self->log("Sleeping for $timeout seconds...", verbose=>1);
         }
 
@@ -1034,6 +1183,7 @@ sub run
             {
                 $self->log('We appear to have been disconnected...');
                 $self->reconnect();
+
                 next;
             }
 
@@ -1042,6 +1192,7 @@ sub run
             $msg = decode('UTF-8', $msg);
 
             chomp $msg;
+
             $msg =~ tr/\r//d;
 
             next if $msg =~ /^\s*$/;
@@ -1049,6 +1200,7 @@ sub run
             if($rh == $sock)
             {
                 $self->log('Reading from socket...', verbose => 1);
+
                 $self->process_server_message($msg, $now);
             }
             elsif($rh == \*STDIN)
@@ -1057,11 +1209,13 @@ sub run
                 $self->log($msg,
                         handle => \*STDOUT,
                         level => 'STDIN');
+
                 $self->process_client_command($msg, $now) or last MAIN;
             }
             else
             {
                 $self->log('Unknown handle...', verbose => 1);
+
                 print encode('UTF-8', Data::Dumper->Dump(
                         [\*STDIN, $sock, $rh],
                         [qw(STDIN sock rh)]));
@@ -1079,20 +1233,27 @@ sub run
 sub send
 {
     my ($self, @messages) = @_;
+
     @messages = map encode('UTF-8', "$_\n"), @messages;
+
     my $sock = $self->{sock_};
+
     unless(defined $sock)
     {
         $self->log('Cannot send: socket undefined.');
+
         return $self;
     }
+
     if($sock->error)
     {
         $self->log('The socket appears to be dead.');
+
         if($self->clearerr == -1)
         {
             $self->log('Yep, definitely dead. -_- Attempting to reconnect...');
             $self->reconnect();
+
             return $self;
         }
         else
@@ -1104,28 +1265,35 @@ sub send
     {
         $sock->print(@messages);
     }
+
     return $self;
 }
 
 sub set_nick
 {
     my ($self, $nick) = @_;
+
     $self->auto_response("NICK $nick");
     $self->{nick} = $nick;
+
     return $self;
 }
 
 sub sing
 {
     my ($self, $target, $nick) = @_;
+
     my @wannabee_lyrics = map { chomp;$_ }
             slurp $self->{lyrics_file} or do {
         warn "Failed to load lyrics file: $!";
+
         $self->privmsg($target, $self->personalize(
                 $target, $nick,
                 "I can't think of any songs..."));
+
         return;
     };
+
     $self->privmsg($target,
             $self->random->pick_random(\@wannabee_lyrics));
 }
@@ -1133,12 +1301,14 @@ sub sing
 sub string
 {
     my ($self, $key, %opts) = @_;
+
     return $self->{strings_}->get_string($key, %opts);
 }
 
 sub strings
 {
     my ($self, $key, %opts) = @_;
+
     return $self->{strings_}->get_strings($key, %opts);
 }
 

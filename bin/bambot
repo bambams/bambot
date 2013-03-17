@@ -140,6 +140,7 @@ sub reexec
 {
     my ($config) = @_;
     my $fn = generate_logfile_name($config);
+
     exec("$0 --noexec @{$config->{ARGV}} 2>&1 | tee $fn");
 }
 
@@ -148,20 +149,26 @@ sub generate_logfile_name
     my ($config) = @_;
     my $i = get_latest_logfile_index($config);
     my $fn = make_logfile_name($config, ++$i);
+
     POSIX::close(
             POSIX::creat($fn, 0600) or die "POSIX::create: $!") or
             warn "POSIX::close: $!";
+
     return $fn;
 }
 
 sub get_latest_logfile_index
 {
     my ($config) = @_;
+
     opendir my $dh, $config->{log_dir} or
             die "opendir: $config->{log_dir}: $!";
+
     my $i = max map { /\.log\.([0-9]+)/ }
             grep { chomp; /\.log(?:\.[0-9]+)?$/ } readdir $dh;
+
     closedir $dh or warn "closedir: $!";
+
     return $i // 0;
 }
 
@@ -169,6 +176,7 @@ sub make_logfile_name
 {
     my ($config, $i) = @_;
     my $fn = "$config->{log_dir}/bambot.log.$i";
+
     return $fn;
 }
 
@@ -178,13 +186,17 @@ sub view_log
     my $fn = make_logfile_name($config,
             get_latest_logfile_index($config));
     my $pager = $ENV{PAGER} // 'less';
+
     { exec($pager, '--', $fn) };
+
     say STDERR "Couldn't exec pager '$pager'...",
             " Falling back to manual STDOUT cat.";
+
     open my $fh, '<', $fn or die "open: $fn: $!";
     print map encode('UTF-8', decode('UTF-8', $_)), <$fh> or
             warn "read: $fn: $!";
     close $fh or die "close: $fn: $!";
+
     exit 0;
 }
 

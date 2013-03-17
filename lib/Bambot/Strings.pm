@@ -33,6 +33,7 @@ $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;
 
 use Bambot::Random;
+
 our %strings = (
     alcoholic => [
         'Lush! >_>',
@@ -55,6 +56,7 @@ our %strings = (
 sub get_string
 {
     my ($self, $key) = @_;
+
     return scalar $self->get_strings($key);
 }
 
@@ -109,7 +111,9 @@ sub new
     my $self = {
         random => Bambot::Random->new(),
     };
+
     bless $self, $class;
+
     return $self;
 }
 
