@@ -481,9 +481,9 @@ sub process_client_command
         my @results = eval $1 or warn $@;
         print encode('UTF-8', Dumper \@results);
     }
-    elsif($command =~ /^exit|q(?:uit)?|x$/)
+    elsif($command =~ /^(exit|x)(?:\s+(.+))?/)
     {
-        $self->quit();
+        $self->quit($2);
         return 0;
     }
     elsif($command =~ m{^/identify$})
