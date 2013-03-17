@@ -2,6 +2,7 @@ bin/bambot
 COPYING
 COPYRIGHT
 lib/Bambot.pm
+lib/Bambot/Ident.pm
 lib/Bambot/Random.pm
 lib/Bambot/Reminder.pm
 lib/Bambot/Strings.pm

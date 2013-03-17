@@ -36,6 +36,7 @@ my @submodules;
 
 BEGIN {
     @submodules = qw(
+        Bambot::Ident
         Bambot::Random
         Bambot::Reminder
         Bambot::Strings
