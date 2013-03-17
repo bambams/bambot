@@ -169,8 +169,6 @@ sub auto_response {
 
     $self->send(@responses);
 
-    my $now = DateTime->now();
-
     for (@responses) {
         $self->log($_, handle => \*STDOUT, level => 'AUTO');
     }
@@ -200,7 +198,6 @@ sub connect {
         push @{$self->{connected_date}}, DateTime->now();
     }
 
-    #$self->{verbose_} = 1;
     return $self;
 }
 
