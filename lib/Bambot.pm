@@ -997,9 +997,7 @@ MAIN:
                 $self->process_server_message($msg, $now);
             } elsif($rh == \*STDIN) {
                 $self->log('Reading from stdin...', verbose => 1);
-                $self->log($msg,
-                        handle => \*STDOUT,
-                        level => 'STDIN');
+                $self->log($msg, handle => \*STDOUT, level => 'STDIN');
 
                 $self->process_client_command($msg, $now) or last MAIN;
             } else {
