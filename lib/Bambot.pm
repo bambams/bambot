@@ -413,6 +413,27 @@ sub log
     return $self;
 }
 
+sub ls
+{
+    my ($self, $what, $params) = @_;
+
+    for ($what)
+    {
+        when ('nicks')
+        {
+            if($params =~ /^([#&]\w+)/)
+            {
+                return $self->get_nicks($1);
+            }
+            else
+            {
+                $! = custom_errstr "Invalid arguments: $params";
+                return;
+            }
+        }
+    }
+}
+
 sub new
 {
     my ($class, $config) = @_;
@@ -498,13 +519,21 @@ sub process_client_command
     {
         $self->join_channel($1);
     }
-    elsif($command =~ m{^/list ([#&]?\w+)})
-    {
-        $self->log($self->get_nicks($1) // $!, handle => \*STDOUT);
-    }
     elsif($command =~ m{^/load$})
     {
         $self->load;
+    }
+    elsif($command =~ m{^/ls\s+(nicks)\s*(.*)})
+    {
+        my @lines = $self->ls($1, $2);
+        if (@lines)
+        {
+            $self->log($_, handle => \*STDOUT) for @lines;
+        }
+        else
+        {
+            $self->log($!);
+        }
     }
     elsif($command =~ m{^/me ([#&]?\w+) (.+)})
     {
