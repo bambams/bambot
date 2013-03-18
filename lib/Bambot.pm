@@ -856,7 +856,7 @@ LOG_PRIVMSG:
         for my $channel (keys %$channels) {
             my $nicks = $channels->{$channel} or next;
 
-            $nicks->{$nick} = 0;
+            $nicks->{$nick} = 0 if $nicks->{$nick};
         }
     }
 
