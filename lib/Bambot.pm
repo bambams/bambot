@@ -33,16 +33,6 @@ package Bambot;
 
 our ($EST, $VERSION);
 
-my @submodules = qw(
-    Bambot::Ident
-    Bambot::Random
-    Bambot::Reminder
-    Bambot::Strings
-    Bambot::Version
-);
-
-load_submodules();
-
 use Class::Unload;
 use Data::Dumper;
 use DateTime;
@@ -55,6 +45,16 @@ use IO::Handle;
 use IO::Select;
 use IO::Socket::INET;
 use List::Util qw(max);
+
+my @submodules = qw(
+    Bambot::Ident
+    Bambot::Random
+    Bambot::Reminder
+    Bambot::Strings
+    Bambot::Version
+);
+
+load_submodules();
 
 sub _is_substitution {
     my ($self, $msg, $substitution_ref) = @_;
