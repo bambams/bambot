@@ -62,10 +62,8 @@ sub _is_substitution {
 
     undef $$substitution_ref;
 
-    for my $opener (keys %pairs)
+    while(my ($opener, $closer) = each %pairs)
     {
-        my $closer = $pairs{$opener};
-
         if($msg =~ /
                 ^
                 s
