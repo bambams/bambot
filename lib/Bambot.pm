@@ -43,8 +43,6 @@ my @submodules = qw(
 
 load_submodules();
 
-use Bambot::Version;
-
 use Class::Unload;
 use Data::Dumper;
 use DateTime;
