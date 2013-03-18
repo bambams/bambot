@@ -32,32 +32,16 @@ use constant {
 package Bambot;
 
 our ($EST, $VERSION);
-my @submodules;
 
-BEGIN {
-    @submodules = qw(
-        Bambot::Ident
-        Bambot::Random
-        Bambot::Reminder
-        Bambot::Strings
-        Bambot::Version
-    );
+my @submodules = qw(
+    Bambot::Ident
+    Bambot::Random
+    Bambot::Reminder
+    Bambot::Strings
+    Bambot::Version
+);
 
-    sub load_ {
-        for (@submodules) {
-            eval "require $_";
-            die $@ if $@;
-        }
-    }
-
-    sub unload_ {
-        for (reverse @submodules) {
-            Class::Unload->unload($_);
-        }
-    }
-
-    load_();
-}
+load_submodules();
 
 use Bambot::Version;
 
@@ -413,6 +397,13 @@ sub load {
     delete $self->{password};
 
     return $self;
+}
+
+sub load_submodules {
+    for (@submodules) {
+        eval "require $_";
+        die $@ if $@;
+    }
 }
 
 sub load_pwd {
@@ -946,7 +937,7 @@ sub reload {
     my $status;
 
     if(eval "require $pkg" && !$@) {
-        unload_();
+        unload_submodules();
         Class::Unload->unload($pkg);
 
         eval "require $pkg";
@@ -1189,6 +1180,12 @@ sub strings {
     my ($self, $key, %opts) = @_;
 
     return $self->{strings_}->get_strings($key, %opts);
+}
+
+sub unload_submodules {
+    for (reverse @submodules) {
+        Class::Unload->unload($_);
+    }
 }
 
 sub version_str {
