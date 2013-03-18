@@ -64,6 +64,8 @@ sub _is_substitution {
 
     while(my ($opener, $closer) = each %pairs)
     {
+        # This regex attempts to parse things like s{foo}{bar} or
+        # s<foo><bar> as an s/// expression.
         if($msg =~ /
                 ^
                 s
@@ -89,7 +91,27 @@ sub _is_substitution {
         }
     }
 
-    if($msg =~ m{^s([^a-zA-Z0-9])([^\1]+)\1([^\1]*)\1(g)?$} &&
+    # This regex attempts to parse a normal s/// expression, though it
+    # supports custom delimiters. That is, 's', almost anything, anything
+    # else, that first thing, anything else, that first thing again, and
+    # optionally a 'g'.
+    #
+    # Delimiters of alphanumerics were disallowed when it was discovered
+    # that things resembling an s/// that weren't occur regularly in the
+    # wild. For a contrived example, "something innocent to" (which is far
+    # from proper grammar, but this is a contrived example...) looks like
+    # s/mething inn/cent t/.
+    if($msg =~ m{
+            ^
+            s
+            ([^a-zA-Z0-9])      # <-- The delimiter character.
+            ([^\1]+)
+            \1
+            ([^\1]*)
+            \1
+            (g)?
+            $
+            }x &&
             $2 ne $3) {
         $$substitution_ref = {
             opener => $1,
