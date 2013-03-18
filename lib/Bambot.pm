@@ -616,6 +616,10 @@ sub process_client_command {
         $self->quit($msg);
 
         exec("$0 @{$self->{ARGV}}");
+    } elsif($command =~ m{^/rm\s+(reminder)\s+(.+)}) {
+        my $user = $self->master->user;
+
+        $self->log($self->rm($1, "$user $2"));
     } elsif($command =~ m{^/uptime$}) {
         $self->log($self->get_uptime_str());
     } elsif($command =~
@@ -819,6 +823,9 @@ sub process_server_message {
                         $target, $nick,
                         "You can only set reminders for yourself."));
             }
+        } elsif($msg =~ /^~rm\s+(reminder)\s+(.+)/) {
+            $self->privmsg($target, $self->personalize(
+                    $target, $nick, $self->rm($1, "$sender $2")));
         } elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/) {
             $self->privmsg($target, $self->personalize(
                     $target, $nick,
@@ -990,6 +997,54 @@ sub remind {
     $reminders->{$reminder->id} = $reminder;
 
     return "Reminder set for $nick at $when in $scope.";
+}
+
+sub rm {
+    my ($self, $what, $params) = @_;
+
+    for ($what) {
+        when('reminder') {
+            my ($ident, $id) = $params =~ /^(\S+)\s+([A-Za-z0-9]{1,40})/;
+
+            $ident = Bambot::Ident->new($ident);
+
+            my $is_master = $ident->user eq $self->master->user;
+            my $nick = $ident->nick;
+
+            unless(defined $id) {
+                $! = custom_errstr
+                        "Invalid params: Reminder id was not specified.";
+
+                return;
+            }
+
+            my $reminders = $self->{reminders_};
+            my @ids = sort map $_->id, grep {
+                        ($is_master || $_->nick eq $nick) &&
+                        $id eq substr($_->id, 0, length $id)
+                    } values %$reminders;
+
+            if(@ids > 1) {
+                @ids = sort { $a cmp $b } @ids;
+
+                $! = custom_errstr "Ambiguous id: @ids";
+
+                return;
+            }
+
+            unless(@ids) {
+                $! = custom_errstr "Reminder $id not found.";
+
+                return;
+            }
+
+            $id = $ids[0];
+
+            delete $reminders->{$id};
+
+            return "Removed reminder $id.";
+        }
+    }
 }
 
 sub run {
