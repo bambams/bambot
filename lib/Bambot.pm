@@ -62,8 +62,7 @@ sub _is_substitution {
 
     undef $$substitution_ref;
 
-    while(my ($opener, $closer) = each %pairs)
-    {
+    while(my ($opener, $closer) = each %pairs) {
         # This regex attempts to parse things like s{foo}{bar} or
         # s<foo><bar> as an s/// expression.
         if($msg =~ /
