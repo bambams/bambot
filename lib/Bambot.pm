@@ -482,6 +482,14 @@ sub ls {
     }
 }
 
+sub master($) {
+    my ($self) = @_;
+    my $nick = $self->{master_nicks}[0]; # h4x.
+    my $ident = "$nick!~$self->{master}";
+
+    return Bambot::Ident->new($ident);
+}
+
 sub new {
     my ($class, $config) = @_;
     my $selector = IO::Select->new(\*STDIN);
@@ -645,7 +653,7 @@ sub process_server_message {
         $self->nickserv_ghost();
     } elsif($msg =~ /^:(\S+)\s+(JOIN|PART)\s+([#&]\S+)/) {
         my ($ident, $command, $channel) = ($1, lc($2), $3);
-        my ($nick) = $ident =~ /([^!]+)/;
+        my $nick = Bambot::Ident->new($ident)->nick;
 
         $self->log("$nick ($ident) ${command}ed $channel.", verbose=>1);
 
@@ -655,13 +663,14 @@ sub process_server_message {
 
         $self->add_urls($msg);
 
-        my ($nick, $ident) = $sender =~ /(\S+)!~?(\S+)/;
-        my $is_master = $ident =~ /^\Q$self->{master}\E$/;
-        my $is_friendly = $self->{friendly_idents} ~~ /^\Q$ident\E$/;
+        my $ident = Bambot::Ident->new($sender);
+        my $nick = $ident->nick;
+        my $is_master = $ident->user eq $self->master->user;
+        my $is_friendly = $ident->user ~~ $self->{friendly_idents};
 
         $target = $target eq $self->{nick} ? $nick : $target;
 
-        my $log = $self->{log_}{$target}{$ident} //= [];
+        my $log = $self->{log_}{$target}{$ident->user} //= [];
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
         my $ctcp = $1;
         my ($personalized_for_me, $for_other_instance) = (0, 0);
@@ -848,9 +857,11 @@ LOG_PRIVMSG:
             shift @$log while @$log > 5;
         }
     } elsif($msg =~ /^:(\S+)\s+QUIT/) {
-        my ($ident, $nick) = ($1, $1 =~ /([^!]+)/);
+        my $ident = Bambot::Ident->new($1);
+        my $nick = $ident->nick;
+        my $user = $ident->user;
 
-        $self->log("$nick ($ident) quit.", verbose=>1);
+        $self->log("$nick ($user) quit.", verbose=>1);
 
         my $channels = $self->{nicks} or return $self;
 
@@ -889,8 +900,8 @@ sub reconnect {
     $self->connect();
     $self->init();
 
-    if(defined $self->{sock_} and @{$self->{master_nicks}}) {
-        $self->privmsg($self->{master_nicks}[0], 'Reconnected...');
+    if(defined $self->{sock_} and defined $self->master->nick) {
+        $self->privmsg($self->master->nick, 'Reconnected...');
     }
 
     return $self;
