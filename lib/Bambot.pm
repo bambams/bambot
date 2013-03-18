@@ -233,9 +233,10 @@ sub exec_reminders {
 
     my $now = DateTime->now();
     my $reminders = $self->{reminders_};
-    my $count = @$reminders;
+    my @reminders = sort { $b <=> $a } values %$reminders;
+    my $count = @reminders;
     my $quota = 3;
-    my @due = grep $_->when <= $now && $quota-- > 0, reverse @$reminders;
+    my @due = grep $_->when <= $now && $quota-- > 0, @reminders;
 
     for (@due) {
         my ($target, $nick, $msg, $when) = (
@@ -243,19 +244,23 @@ sub exec_reminders {
 
         $self->privmsg($target, $self->personalize($target, $nick,
                 "Reminder that it's $when: $msg"));
+
+        delete $reminders->{$_->id};
     }
 
-    $self->log("<<<<<<    Due reminders    ------", verbose=>1);
-    $self->log("$_", verbose=>1) for @due;
-    $self->log("---------------------------------", verbose=>1);
+    if($self->{verbose})
+    {
+        my @reminders = values %$reminders;
 
-    @$reminders = grep !($_ ~~ \@due), @$reminders;
+        $self->log("<<<<<<    Due reminders    ------", verbose=>1);
+        $self->log("$_", verbose=>1) for @due;
+        $self->log("---------------------------------", verbose=>1);
+        $self->log("$_", verbose=>1) for @reminders;
+        $self->log(">>>>>> Remaining reminders ------", verbose=>1);
 
-    $self->log("$_", verbose=>1) for @$reminders;
-    $self->log(">>>>>> Remaining reminders ------", verbose=>1);
-
-    $self->log(sprintf("Executed %d/%d reminders. %d remaining...",
-            scalar @due, $count, scalar @$reminders), verbose=>1);
+        $self->log(sprintf("Executed %d/%d reminders. %d remaining...",
+                scalar @due, $count, scalar @reminders), verbose=>1);
+    }
 
     return @due;
 }
@@ -289,7 +294,7 @@ sub get_nicks {
 sub get_reminders {
     my ($self, $nick) = @_;
 
-    return grep $_->nick eq $nick, @{$self->{reminders_}};
+    return sort grep $_->nick eq $nick, values %{$self->{reminders_}};
 }
 
 sub get_uptime_str {
@@ -457,7 +462,9 @@ sub ls {
 
             my $privates = 0;
 
-            my @reminders = grep {
+            my @reminders =
+                    map { my $id = substr($_->id, 0, 6); "$id: $_" }
+                    grep {
                         if($_->target eq $nick && $target ne $nick) {
                             $privates++;
                             0;
@@ -502,7 +509,7 @@ sub new {
         on_ => 0,
         master_nicks => [],
         random_ => Bambot::Random->new(),
-        reminders_ => [],
+        reminders_ => {},
         selector_ => $selector,
         strings_ => Bambot::Strings->new(),
     };
@@ -967,11 +974,20 @@ sub remind {
 
     $target = $nick if $scope eq 'private';
 
+    my $reminder = Bambot::Reminder->new($target, $nick, $when, $msg);
+    my $id = $reminder->id;
+
     my $reminders = $self->{reminders_};
 
-    push @$reminders, Bambot::Reminder->new($target, $nick, $when, $msg);
+    if(exists $reminders->{$id})
+    {
+        $self->log('Reminder SHA1 collision:' .
+                " {{{$reminder}}} vs. {{{$reminders->{$id}}}}");
+        $! = custom_errstr "Reminder already exists.";
+        return;
+    }
 
-    @$reminders = sort { $a <=> $b } @$reminders;
+    $reminders->{$reminder->id} = $reminder;
 
     return "Reminder set for $nick at $when in $scope.";
 }
@@ -989,7 +1005,9 @@ MAIN:
 
         my $now = DateTime->now();
         my $timeout;
-        my $next_reminder = $self->{reminders_}[-1];
+
+        my $reminders = $self->{reminders_};
+        my $next_reminder = (sort values %$reminders)[-1];
 
         if(defined $next_reminder && $next_reminder->when > $now) {
             $timeout = $next_reminder->when

@@ -34,6 +34,7 @@ use overload (
 );
 
 use Data::Dumper;
+use Digest::SHA1 qw/sha1_hex/;
 use Encode;
 
 $Data::Dumper::Sortkeys = 1;
@@ -58,6 +59,10 @@ sub equals($$) {
             $lhs->nick eq $rhs->nick &&
             $lhs->target eq $rhs->target &&
             $lhs->when == $rhs->when;
+}
+
+sub id {
+    return sha1_hex(shift->to_string());
 }
 
 sub new($$$$$) {
