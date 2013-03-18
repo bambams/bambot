@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with bambot.  If not, see <http://www.gnu.org/licenses/>.
 # 
+package Bambot;
+
 use v5.016;
 use strict;
 use warnings;
@@ -28,8 +30,6 @@ use constant {
     DEFAULT_REALNAME => 'Unknown',
     DEFAULT_USERNAME => 'unknown',
 };
-
-package Bambot;
 
 our ($EST, $VERSION);
 
