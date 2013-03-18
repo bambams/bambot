@@ -285,6 +285,12 @@ sub get_nicks {
     return $nicks;
 }
 
+sub get_reminders {
+    my ($self, $nick) = @_;
+
+    return grep $_->nick eq $nick, @{$self->{reminders_}};
+}
+
 sub get_uptime_str {
     my ($self) = @_;
 
@@ -426,7 +432,7 @@ sub log {
 }
 
 sub ls {
-    my ($self, $what, $params) = @_;
+    my ($self, $target, $what, $params) = @_;
 
     for ($what) {
         when('nicks') {
@@ -448,10 +454,21 @@ sub ls {
                 return;
             };
 
-            my @reminders = map "$_", grep $_->nick eq $nick,
-                    @{$self->{reminders_}};
+            my $privates = 0;
 
-            if(@reminders) {
+            my @reminders = grep {
+                        if($_->target eq $nick && $target ne $nick) {
+                            $privates++;
+                            0;
+                        } else {
+                            1;
+                        }
+                    } $self->get_reminders($nick);
+
+            if(@reminders || $privates) {
+                unshift @reminders,
+                        "$privates private reminders." if $privates;
+
                 unshift @reminders, "Remaining reminders for $nick:";
 
                 return @reminders;
@@ -545,7 +562,7 @@ sub process_client_command {
     } elsif($command =~ m{^/load$}) {
         $self->load;
     } elsif($command =~ m{^/ls\s+(nicks|reminders)\s*(.*)}) {
-        my @lines = $self->ls($1, $2);
+        my @lines = $self->ls(undef, $1, $2);
 
         if(@lines) {
             $self->log($_, handle => \*STDOUT) for @lines;
@@ -741,7 +758,7 @@ sub process_server_message {
             $self->privmsg($target,
                     $self->string('loaded_config')) if $self->load;
         } elsif($is_friendly && $msg =~ /^~ls\s+(reminders)\b/) {
-            my @lines = $self->ls($1, $nick);
+            my @lines = $self->ls($target, $1, $nick);
 
             if(@lines) {
                 if(@lines > 4) {
