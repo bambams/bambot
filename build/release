@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for f in $(git remote); do
+    if [ "$f" == origin -a "$1" != -f ]; then
+        continue;
+    fi;
+
+    git push --tags "$f" :;
+done;
