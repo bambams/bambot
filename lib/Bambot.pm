@@ -1206,6 +1206,15 @@ sub strings {
     return $self->{strings_}->get_strings($key, %opts);
 }
 
+sub unlink_pid_file {
+    my ($self) = @_;
+    my $file = $self->{pid_file};
+
+    unlink $file or die "unlink: $file: $!";
+
+    return $self;
+}
+
 sub unload_submodules {
     for (reverse @submodules) {
         Class::Unload->unload($_);
@@ -1214,6 +1223,19 @@ sub unload_submodules {
 
 sub version_str {
     return "This is Bambot v$Bambot::VERSION.";
+}
+
+sub write_pid_file {
+    my ($self) = @_;
+    my $file = $self->{pid_file};
+
+    open my $fh, '>', $file or die "open: $file: $!";
+
+    print $fh $$ or die "print: $file: $!";
+
+    $fh->close or warn "close: $file: $!";
+
+    return $self;
 }
 
 1;

@@ -100,6 +100,7 @@ my %config = (
     lyrics_file => "$ENV{HOME}/.bambot/lyrics",
     log_dir => "$ENV{HOME}/.bambot/logs",
     host => DEFAULT_HOST,
+    pid_file => "$ENV{HOME}/.bambot/pid",
     port => DEFAULT_PORT,
 );
 
@@ -109,6 +110,7 @@ my %opts = (
     'l|log' => \$config{view_log},
     'noexec' => \$config{noexec},
     'noshenanigans' => sub { say STDERR "Aborting..."; exit 1; },
+    'pid=s' => \$config{pid_file},
     'v|verbose' => \$config{verbose},
 );
 
@@ -124,7 +126,7 @@ if(!$config{noexec}) {
 
 our $bambot = Bambot->new(\%config);
 
-$bambot->connect->init->run;
+$bambot->write_pid_file->connect->init->run->unlink_pid_file;
 
 BEGIN {
     $SIG{USR1} = sub {
