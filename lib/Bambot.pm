@@ -445,7 +445,7 @@ sub log {
 
     my $now = DateTime->now();
 
-    $opts{handle}->say("$now $opts{level}: $message");
+    $opts{handle}->say(encode('UTF-8', "$now $opts{level}: $message"));
 
     return $self;
 }
