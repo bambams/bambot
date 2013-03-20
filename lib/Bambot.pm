@@ -144,8 +144,7 @@ sub add_urls {
             my $max_urls = $self->{max_urls};
 
             # Limit number of URLs to max_urls. Purge old URLs.
-            splice @lines, $max_urls, @lines - $max_urls
-                    if @lines > $max_urls;
+            splice @lines, 0, @lines - $max_urls if @lines > $max_urls;
 
             $_ = <<'EOF' . join '', @lines;
 # This file is automatically written by Bambot, an IRC bot. The following
