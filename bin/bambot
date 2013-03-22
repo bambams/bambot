@@ -68,7 +68,6 @@ use constant {
 
 use Bambot;
 use Data::Dumper;
-use Encode;
 use File::Find qw/finddepth/;
 use Getopt::Long qw/GetOptionsFromArray
         :config auto_help auto_version bundling no_auto_abbrev
@@ -78,6 +77,8 @@ use List::Util qw(max);
 BEGIN {
     our $VERSION = $Bambot::VERSION;
 }
+
+binmode $_, ':encoding(UTF-8)' for (\*STDIN, \*STDOUT, \*STDERR);
 
 # Lets be a little evil here.
 if($< == 0 || $> == 0) {
@@ -186,8 +187,8 @@ sub view_log {
     say STDERR "Couldn't exec pager '$pager'...",
             " Falling back to manual STDOUT cat.";
 
-    open my $fh, '<', $fn or die "open: $fn: $!";
-    print map encode('UTF-8', decode('UTF-8', $_)), <$fh> or
+    open my $fh, '< :encoding(UTF-8)', $fn or die "open: $fn: $!";
+    print map $_, <$fh> or
             warn "read: $fn: $!";
     close $fh or die "close: $fn: $!";
 

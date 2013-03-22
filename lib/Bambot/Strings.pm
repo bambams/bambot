@@ -27,7 +27,6 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
-use Encode;
 
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;

@@ -35,7 +35,6 @@ use overload (
 
 use Data::Dumper;
 use Digest::SHA1 qw/sha1_hex/;
-use Encode;
 
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;

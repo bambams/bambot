@@ -15,7 +15,6 @@ WriteMakefile(
             'DateTime::Format::Duration' => 0,
             'DateTime::Format::Natural' => 0,
             'Digest::SHA1' => 0,
-            'Encode' => 0,
             'Errno::AnyString' => 0,
             'ExtUtils::MakeMaker' => 0,
             'File::Find' => 0,

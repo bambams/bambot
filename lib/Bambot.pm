@@ -39,7 +39,6 @@ use Data::Dumper;
 use DateTime;
 use DateTime::Format::Duration;
 use DateTime::Format::Natural;
-use Encode;
 use Errno::AnyString qw/custom_errstr/;
 use File::Slurp qw(edit_file slurp);
 use IO::Handle;
@@ -195,7 +194,7 @@ sub connect {
             ) or warn "IO::Socket::INET::new: $!";
 
     if($sock) {
-        binmode $sock;
+        binmode $sock, ':encoding(UTF-8)';
 
         $self->{on_} = 1;
         $self->{sock_} = $sock;
@@ -369,14 +368,14 @@ sub join_channel {
 sub load {
     my ($self) = @_;
 
-    open my $fh, '<', $self->{config_file} or return 0;
+    open my $fh, '< :encoding(UTF-8)', $self->{config_file} or return 0;
 
     my $mode = (stat $fh)[2];
 
     die sprintf 'Insecure config permissions: %04o', $mode & 0777
             if ($mode & 0177) != 0;
 
-    while(my $line = decode('UTF-8', <$fh>)) {
+    while(my $line = <$fh>) {
         next if $line =~ /^\s*(#|$)/;
 
         chomp $line;
@@ -445,7 +444,7 @@ sub log {
 
     my $now = DateTime->now();
 
-    $opts{handle}->say(encode('UTF-8', "$now $opts{level}: $message"));
+    $opts{handle}->say("$now $opts{level}: $message");
 
     return $self;
 }
@@ -578,7 +577,7 @@ sub process_client_command {
     } elsif($command =~ m{^/eval (.+)}) {
         my @results = eval $1 or warn $@;
 
-        print encode('UTF-8', Dumper \@results);
+        print Dumper \@results;
     } elsif($command =~ m{^/(exit|x)(?:\s+(.+))?}) {
         $self->quit($2);
 
@@ -1099,8 +1098,6 @@ MAIN:
 
             my $now = DateTime->now();
 
-            $msg = decode('UTF-8', $msg);
-
             chomp $msg;
 
             $msg =~ tr/\r//d;
@@ -1119,9 +1116,9 @@ MAIN:
             } else {
                 $self->log('Unknown handle...', verbose => 1);
 
-                print encode('UTF-8', Data::Dumper->Dump(
+                print Data::Dumper->Dump(
                         [\*STDIN, $sock, $rh],
-                        [qw(STDIN sock rh)]));
+                        [qw(STDIN sock rh)]);
             }
         }
 
@@ -1136,7 +1133,7 @@ MAIN:
 sub send {
     my ($self, @messages) = @_;
 
-    @messages = map encode('UTF-8', "$_\n"), @messages;
+    @messages = map "$_\n", @messages;
 
     my $sock = $self->{sock_};
 
@@ -1228,7 +1225,7 @@ sub write_pid_file {
     my ($self) = @_;
     my $file = $self->{pid_file};
 
-    open my $fh, '>', $file or die "open: $file: $!";
+    open my $fh, '> :encoding(UTF-8)', $file or die "open: $file: $!";
 
     print $fh $$ or die "print: $file: $!";
 
