@@ -25,13 +25,6 @@ use warnings;
 use version;
 use utf8;
 
-use constant {
-    DEFAULT_MAX_URLS => 5,
-    DEFAULT_NICK => 'bambot',
-    DEFAULT_REALNAME => 'Unknown',
-    DEFAULT_USERNAME => 'unknown',
-};
-
 our ($EST, $VERSION);
 
 use Class::Unload;
@@ -365,61 +358,6 @@ sub join_channel {
     return $self;
 }
 
-sub load {
-    my ($self) = @_;
-
-    open my $fh, '< :encoding(UTF-8)', $self->{config_file} or return 0;
-
-    my $mode = (stat $fh)[2];
-
-    die sprintf 'Insecure config permissions: %04o', $mode & 0777
-            if ($mode & 0177) != 0;
-
-    while(my $line = <$fh>) {
-        next if $line =~ /^\s*(#|$)/;
-
-        chomp $line;
-
-        if($line =~ /^(\w+)\s*=\s*(.*)/) {
-            my $type = ref $self->{$1};
-            my @values = split ' ', $2;
-            my $append = @values && substr($values[0], 0, 1) eq '+';
-
-            if($append) {
-                $values[0] = substr($values[0], 1);
-            }
-
-            if($type eq 'ARRAY') {
-                if($append) {
-                    push @{$self->{$1}}, @values;
-                } else {
-                    $self->{$1} = \@values;
-                }
-            } elsif($type eq 'HASH') {
-                if($append) {
-                    my %values = @values;
-
-                    @{$self->{$1}}{keys %values} = values %values;
-                } else {
-                    $self->{$1} = {@values};
-                }
-            } else {
-                $self->{$1} = $2;
-            }
-
-            next;
-        }
-
-        warn "invalid config: $line";
-    }
-
-    $fh->close or warn "close: $!";
-
-    delete $self->{password};
-
-    return $self;
-}
-
 sub load_submodules {
     for (@submodules) {
         eval "require $_";
@@ -428,10 +366,6 @@ sub load_submodules {
 }
 
 sub load_pwd {
-    my ($self) = @_;
-
-    (map { /[^=]+=\s*(.*)/ and $1 or () } grep /^password\s*=/,
-            slurp($self->{config_file}))[-1];
 }
 
 sub log {

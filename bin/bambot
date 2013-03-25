@@ -61,12 +61,8 @@ use strict;
 use warnings;
 use utf8;
 
-use constant {
-    DEFAULT_HOST => 'localhost',
-    DEFAULT_PORT => 6667,
-};
-
 use Bambot;
+use Bambot::Config;
 use Data::Dumper;
 use File::Find qw/finddepth/;
 use Getopt::Long qw/GetOptionsFromArray
@@ -95,37 +91,31 @@ Please do not run Bambot as root. >:)";
     die "This shouldn't happen, so good job if it did. :)";
 }
 
-my %config = (
-    ARGV => [grep { $_ !~ /^--noexec$/ } @ARGV],
-    config_file => "$ENV{HOME}/.bambot/config",
-    lyrics_file => "$ENV{HOME}/.bambot/lyrics",
-    log_dir => "$ENV{HOME}/.bambot/logs",
-    host => DEFAULT_HOST,
-    pid_file => "$ENV{HOME}/.bambot/pid",
-    port => DEFAULT_PORT,
-);
+my $config = Bambot::Config->new();
+
+my $argv = [grep { $_ !~ /^--noexec$/ } @ARGV];
 
 my %opts = (
-    'F|file=s' => \$config{config_file},
-    'L|logdir=s' => \$config{log_dir},
-    'l|log' => \$config{view_log},
-    'noexec' => \$config{noexec},
+    'F|file=s' => sub { $config->config_file($_[1]) },
+    'L|logdir=s' => sub { $config->log_dir($_[1]) },
+    'l|log' => sub { $config->view_log(1) },
+    'noexec' => sub { $config->noexec(1) },
     'noshenanigans' => sub { say STDERR "Aborting..."; exit 1; },
-    'pid=s' => \$config{pid_file},
-    'v|verbose' => \$config{verbose},
+    'pid=s' => sub { $config->pid_file($_[1]) },
+    'v|verbose' => sub { $config->verbose(1) },
 );
 
 GetOptionsFromArray(\@ARGV, %opts) or exit 1;
 
-if($config{view_log}) {
-    view_log(\%config);
+if($config->view_log) {
+    view_log($config);
 }
 
-if(!$config{noexec}) {
-    reexec(\%config);
+unless($config->noexec) {
+    reexec($config);
 }
 
-our $bambot = Bambot->new(\%config);
+our $bambot = Bambot->new($config);
 
 $bambot->write_pid_file->connect->init->run->unlink_pid_file;
 
@@ -139,7 +129,7 @@ sub reexec {
     my ($config) = @_;
     my $fn = generate_logfile_name($config);
 
-    exec("$0 --noexec @{$config->{ARGV}} 2>&1 | tee $fn");
+    exec("$0 --noexec @$argv 2>&1 | tee $fn");
 }
 
 sub generate_logfile_name
@@ -158,8 +148,8 @@ sub generate_logfile_name
 sub get_latest_logfile_index {
     my ($config) = @_;
 
-    opendir my $dh, $config->{log_dir} or
-            die "opendir: $config->{log_dir}: $!";
+    opendir my $dh, $config->log_dir or
+            die sprintf "opendir: %s: $!", $config->log_dir;
 
     my $i = max map { /\.log\.([0-9]+)/ }
             grep { chomp; /\.log(?:\.[0-9]+)?$/ } readdir $dh;
@@ -171,7 +161,7 @@ sub get_latest_logfile_index {
 
 sub make_logfile_name {
     my ($config, $i) = @_;
-    my $fn = "$config->{log_dir}/bambot.log.$i";
+    my $fn = sprintf "%s/bambot.log.$i", $config->log_dir;
 
     return $fn;
 }
