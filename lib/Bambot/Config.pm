@@ -109,20 +109,27 @@ sub load {
                 $values[0] = substr($values[0], 1);
             }
 
-            if($attr_type =~ /^ArrayRef\[/) {
-                if($append) {
-                    $self->$key($self->$key(), @values);
+            eval {
+                if($attr_type =~ /^ArrayRef\[/) {
+                    if($append) {
+                        $self->$key($self->$key(), @values);
+                    } else {
+                        $self->$key(\@values);
+                    }
+                } elsif($attr_type =~ /^HashRef\[/) {
+                    if($append) {
+                        $self->$key({%{$self->$key()}, @values});
+                    } else {
+                        $self->$key({@values});
+                    }
                 } else {
-                    $self->$key(\@values);
+                    $self->$key($value);
                 }
-            } elsif($attr_type =~ /^HashRef\[/) {
-                if($append) {
-                    $self->$key({%{$self->$key()}, @values});
-                } else {
-                    $self->$key({@values});
-                }
-            } else {
-                $self->$key($value);
+            };
+
+            if($@) {
+                say STDERR $@;
+                return 0;
             }
 
             next;
