@@ -5,5 +5,9 @@ build_dir="${build_dir:-.}";
 cd "$build_dir/.." || exit $?;
 
 for f in bin/* $(find -type f \( -name \*.pl -o -name \*.pm \) ); do
+    if perl -E 'exit int !($ARGV[0] =~ m{^\./blib})' "$f"; then
+        continue;
+    fi;
+
     PERL5LIB=lib perl -c "$f" || exit $?;
 done;
