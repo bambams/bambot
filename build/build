@@ -9,6 +9,7 @@ source build/rc;
 bump_args=();
 force=n;
 skip_bump=n;
+skip_compile=n;
 
 # Parse arguments. For now, h4x.
 while [ $# -gt 0 ]; do
@@ -18,18 +19,22 @@ while [ $# -gt 0 ]; do
         bump_args=("${bump_args[@]}" -G);
     elif [ "$1" == -v ]; then
         skip_bump=y;
+    elif [ "$1" == -C ]; then
+        skip_compile=y;
     fi;
 
     shift;
 done;
 
-build_log="$(./build/compile 2>&1)";
-errno=$?;
+if [ "$skip_compile" != y ]; then
+    build_log="$(./build/compile 2>&1)";
+    errno=$?;
 
-if [ $errno != 0 ]; then
-    echo "$build_log" 1>&2;
-    echo "Code doesn't compile... Aborting.";
-    exit $errno;
+    if [ $errno != 0 ]; then
+        echo "$build_log" 1>&2;
+        echo "Code doesn't compile... Aborting.";
+        exit $errno;
+    fi;
 fi;
 
 if [ "$skip_bump" == n ]; then
