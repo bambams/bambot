@@ -1,0 +1,3 @@
+master_user = debugger@localhost
+port = 27015
+verbose = 1
