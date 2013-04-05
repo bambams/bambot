@@ -31,6 +31,7 @@ use overload (
     '~~' => \&smart_match_,
     '<=>' => \&compare_,
     '""' => \&to_string,
+    'cmp' => \&compare_,
 );
 
 use Data::Dumper;
