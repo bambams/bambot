@@ -40,6 +40,7 @@ use DateTime;
 use DateTime::Format::Duration;
 use DateTime::Format::Natural;
 use Errno::AnyString qw/custom_errstr/;
+use File::Write::Rotate;
 use File::Slurp qw(edit_file slurp);
 use IO::Handle;
 use IO::Select;
@@ -444,7 +445,10 @@ sub log {
 
     my $now = DateTime->now();
 
-    $opts{handle}->say("$now $opts{level}: $message");
+    $message = "$now $$ $opts{level}: $message\n";
+
+    $self->{logger_}->write($message);
+    $opts{handle}->print($message);
 
     return $self;
 }
@@ -511,6 +515,18 @@ sub master($) {
 
 sub new {
     my ($class, $config) = @_;
+
+    my $rotator = File::Write::Rotate->new(
+            dir => $config->{log_dir},
+            histories => 500,
+            prefix => 'bambot',
+            size => 1024 ** 2,
+            suffix => '.log',
+            );
+
+    # Compress old log files.
+    $rotator->compress();
+
     my $selector = IO::Select->new(\*STDIN);
 
     my $self = {
@@ -519,6 +535,7 @@ sub new {
         creation_date => DateTime->now(),
         friendly_idents => [],
         on_ => 0,
+        logger_ => $rotator,
         master_nicks => [],
         max_urls => DEFAULT_MAX_URLS,
         random_ => Bambot::Random->new(),
@@ -1126,6 +1143,9 @@ MAIN:
     }
 
     $self->close();
+
+    # Compress old log files.
+    $self->{logger_}->compress();
 
     return $self;
 }

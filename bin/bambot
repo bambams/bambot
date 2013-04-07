@@ -30,7 +30,7 @@ bambot - A simple^Wsarcastic IRC bot.
   bambot --help
   bambot --version
   bambot [ -F | --file=FILE ] [ -L | --logdir=DIR ] [ -l | --log ]
-         [ --noexec ] [ --noshenanigans ] [ -v | --verbose ]
+         [ --noshenanigans ] [ -v | --verbose ]
 
     -F, --file=FILE     Specify an alternative config file.
 
@@ -41,11 +41,6 @@ bambot - A simple^Wsarcastic IRC bot.
 
     --help              Show this SYNOPSIS. (Uses Getopt::Long's
                         auto_help)
-
-    --noexec            Don't exec() pipe into tee. This is used for
-                        poor-man's logging. This happens automagically,
-                        but if for some reason you don't want this to
-                        happen you could pass this yourself.
 
     --noshenanigans     If you have to ask...
 
@@ -96,7 +91,6 @@ Please do not run Bambot as root. >:)";
 }
 
 my %config = (
-    ARGV => [grep { $_ !~ /^--noexec$/ } @ARGV],
     config_file => "$ENV{HOME}/.bambot/config",
     lyrics_file => "$ENV{HOME}/.bambot/lyrics",
     log_dir => "$ENV{HOME}/.bambot/logs",
@@ -121,10 +115,6 @@ if($config{view_log}) {
     view_log(\%config);
 }
 
-if(!$config{noexec}) {
-    reexec(\%config);
-}
-
 our $bambot = Bambot->new(\%config);
 
 $bambot->write_pid_file->connect->init->run->unlink_pid_file;
@@ -135,51 +125,11 @@ BEGIN {
     };
 }
 
-sub reexec {
-    my ($config) = @_;
-    my $fn = generate_logfile_name($config);
-
-    exec("$0 --noexec @{$config->{ARGV}} 2>&1 | tee $fn");
-}
-
-sub generate_logfile_name
-{
-    my ($config) = @_;
-    my $i = get_latest_logfile_index($config);
-    my $fn = make_logfile_name($config, ++$i);
-
-    POSIX::close(
-            POSIX::creat($fn, 0600) or die "POSIX::create: $!") or
-            warn "POSIX::close: $!";
-
-    return $fn;
-}
-
-sub get_latest_logfile_index {
-    my ($config) = @_;
-
-    opendir my $dh, $config->{log_dir} or
-            die "opendir: $config->{log_dir}: $!";
-
-    my $i = max map { /\.log\.([0-9]+)/ }
-            grep { chomp; /\.log(?:\.[0-9]+)?$/ } readdir $dh;
-
-    closedir $dh or warn "closedir: $!";
-
-    return $i // 0;
-}
-
-sub make_logfile_name {
-    my ($config, $i) = @_;
-    my $fn = "$config->{log_dir}/bambot.log.$i";
-
-    return $fn;
-}
-
 sub view_log {
     my ($config) = @_;
-    my $fn = make_logfile_name($config,
-            get_latest_logfile_index($config));
+
+    my $fn = "$config->{log_dir}/bambot.log";
+
     my $pager = $ENV{PAGER} // 'less';
 
     { exec($pager, '--', $fn) };
