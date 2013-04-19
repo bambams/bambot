@@ -772,7 +772,7 @@ sub process_server_message {
                     $self->personalize($target, $nick, "\\o/"));
         } elsif($is_friendly && $is_substitution) {
             if(my ($old_msg_ref) = map { \$_; }
-                    (grep { /\Q$substitution->{pattern}\E/ } @$log)[-1]) {
+                    (grep { /$substitution->{pattern}/ } @$log)[-1]) {
                 my ($pat, $rep, $glob) = @$substitution{
                         qw(pattern replacement global)};
 
