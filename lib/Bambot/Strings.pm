@@ -26,12 +26,15 @@ use strict;
 use utf8;
 use warnings;
 
+use Carp;
 use Data::Dumper;
 
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;
 
 use Bambot::Random;
+
+our @CARP_NOT = qw/Bambot/;
 
 our %strings = (
     alcoholic => [
@@ -65,7 +68,7 @@ sub get_strings {
 
     for (@keys) {
         if(ref $value ne 'HASH' || ! defined $value->{$_}) {
-            warn "Invalid string: $key";
+            carp "Invalid string: $key";
             return;
         }
 
@@ -87,7 +90,7 @@ sub get_strings {
     my @missing_params = $value =~ /%{(\w+)}/g;
 
     if(@missing_params) {
-        die "The string '$key' requires the following parameters: " .
+        croak "The string '$key' requires the following parameters: " .
                 join ', ', @missing_params;
     }
 

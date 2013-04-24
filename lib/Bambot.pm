@@ -34,6 +34,7 @@ use constant {
 
 our ($EST, $VERSION);
 
+use Carp;
 use Class::Unload;
 use Data::Dumper;
 use DateTime;
@@ -134,7 +135,7 @@ sub add_urls {
         # File::Slurp::edit_file is resetting permissions. Need to
         # temporarily change umask so read permissions are not removed
         # from group and others.
-        my $orig_umask = umask 033 or warn "Failed to modify umask";
+        my $orig_umask = umask 033 or carp "Failed to modify umask";
 
         edit_file {
             my @lines = grep { /^http/ } split /^/m;
@@ -167,7 +168,7 @@ sub add_urls {
 EOF
         } $self->{url_file};
 
-        umask $orig_umask or warn "Failed to restore umask";
+        umask $orig_umask or carp "Failed to restore umask";
     }
 }
 
@@ -192,7 +193,7 @@ sub connect {
             PeerAddr => $self->{host},
             PeerPort => $self->{port},
             Proto => 'tcp',
-            ) or warn "IO::Socket::INET::new: $!";
+            ) or carp "IO::Socket::INET::new: $!";
 
     if($sock) {
         binmode $sock, ':encoding(UTF-8)';
@@ -373,7 +374,7 @@ sub load {
 
     my $mode = (stat $fh)[2];
 
-    die sprintf 'Insecure config permissions: %04o', $mode & 0777
+    croak sprintf 'Insecure config permissions: %04o', $mode & 0777
             if ($mode & 0177) != 0;
 
     while(my $line = <$fh>) {
@@ -411,10 +412,10 @@ sub load {
             next;
         }
 
-        warn "invalid config: $line";
+        carp "invalid config: $line";
     }
 
-    $fh->close or warn "close: $!";
+    $fh->close or carp "close: $!";
 
     delete $self->{password};
 
@@ -424,7 +425,7 @@ sub load {
 sub load_submodules {
     for (@submodules) {
         eval "require $_";
-        die $@ if $@;
+        croak $@ if $@;
     }
 }
 
@@ -592,7 +593,7 @@ sub process_client_command {
     if($command =~ m{^/ctcp (\S+) (.+)}) {
         $self->privmsg($1, $self->ctcp($2));
     } elsif($command =~ m{^/eval (.+)}) {
-        my @results = eval $1 or warn $@;
+        my @results = eval $1 or carp $@;
 
         print Dumper \@results;
     } elsif($command =~ m{^/(exit|x)(?:\s+(.+))?}) {
@@ -1196,7 +1197,7 @@ sub sing {
 
     my @wannabee_lyrics = map { chomp;$_ }
             slurp $self->{lyrics_file} or do {
-        warn "Failed to load lyrics file: $!";
+        carp "Failed to load lyrics file: $!";
 
         $self->privmsg($target, $self->personalize(
                 $target, $nick,
@@ -1225,7 +1226,7 @@ sub unlink_pid_file {
     my ($self) = @_;
     my $file = $self->{pid_file};
 
-    unlink $file or die "unlink: $file: $!";
+    unlink $file or croak "unlink: $file: $!";
 
     return $self;
 }
@@ -1244,11 +1245,11 @@ sub write_pid_file {
     my ($self) = @_;
     my $file = $self->{pid_file};
 
-    open my $fh, '> :encoding(UTF-8)', $file or die "open: $file: $!";
+    open my $fh, '> :encoding(UTF-8)', $file or croak "open: $file: $!";
 
-    print $fh $$ or die "print: $file: $!";
+    print $fh $$ or croak "print: $file: $!";
 
-    $fh->close or warn "close: $file: $!";
+    $fh->close or carp "close: $file: $!";
 
     return $self;
 }

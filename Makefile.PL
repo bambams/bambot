@@ -9,6 +9,7 @@ WriteMakefile(
         LICENSE => 'GNU GPLv2+',
         NAME => 'Bambot',
         PREREQ_PM => {
+            'Carp' => 0,
             'Class::Unload' => 0,
             'Data::Dumper' => 0,
             'DateTime' => 0,
