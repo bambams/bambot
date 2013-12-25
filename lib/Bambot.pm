@@ -40,6 +40,7 @@ use Data::Dumper;
 use DateTime;
 use DateTime::Format::Duration;
 use DateTime::Format::Natural;
+use Encode;
 use Errno::AnyString qw/custom_errstr/;
 use File::Write::Rotate;
 use File::Slurp qw(edit_file slurp);
@@ -448,7 +449,7 @@ sub log {
 
     $message = "$now $$ $opts{level}: $message\n";
 
-    $self->{logger_}->write($message);
+    $self->{logger_}->write(encode('UTF-8', $message));
     $opts{handle}->print($message);
 
     return $self;
