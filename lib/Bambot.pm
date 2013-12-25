@@ -662,6 +662,19 @@ sub process_client_command {
                 $self->{verbose} ? "yes" : "no");
     } elsif($command =~ m{^/version$}) {
         $self->log(Bambot::version_str(), handle => \*STDOUT);
+    } elsif($command =~ m{^/who ([#&]\S+)}) {
+        my $channel_name = $1;
+        my $nicks = $self->{nicks};
+        my $channel = $nicks->{$channel_name};
+
+        if(ref $channel eq 'HASH') {
+            $self->log("Believed to be in $channel_name: " .
+                    join ', ',
+                    sort { $a cmp $b }
+                    grep $channel->{$_}, keys %$channel);
+        } else {
+            $self->log("Not in $channel_name?");
+        }
     } else {
         $self->log("Unknown command: $command");
         $self->log('Use /quit to quit. Use /irc for raw IRC.');
