@@ -775,15 +775,22 @@ sub process_server_message {
             my ($pat, $rep, $glob) = @$substitution{
                     qw(pattern replacement global)};
 
-            if(my ($old_msg_ref) = map \$_, (grep /$pat/, @$log)[-1]) {
-                if($glob) {
-                    $$old_msg_ref =~ s/$pat/\x02$rep\x0F/g;
-                } else {
-                    $$old_msg_ref =~ s/$pat/\x02$rep\x0F/;
-                }
+            eval {
+                if(my ($old_msg_ref) = map \$_,
+                        (grep /$pat/, @$log)[-1]) {
+                    if($glob) {
+                        $$old_msg_ref =~ s/$pat/\x02$rep\x0F/g;
+                    } else {
+                        $$old_msg_ref =~ s/$pat/\x02$rep\x0F/;
+                    }
 
-                $self->privmsg($target,
-                        "$nick meant to say: $$old_msg_ref");
+                    $self->privmsg($target,
+                            "$nick meant to say: $$old_msg_ref");
+                }
+            };
+
+            if($@) {
+                $self->privmsg($target, $@);
             }
         } elsif(0 && $is_master && $msg =~ /
                 drunk|intoxicated|
