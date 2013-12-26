@@ -763,19 +763,21 @@ sub process_server_message {
                 $self->notice($nick, $self->ctcp("PONG"));
             }
         } elsif($is_friendly &&
-                $msg eq "$self->{nick}: help") {
-            $self->privmsg($target, $self->personalize(
-                    $target, $nick,
-                    $self->string('help_stub')));
+                $personalized_for_me) {
+            if($msg eq "help") {
+                $self->privmsg($target, $self->personalize(
+                        $target, $nick,
+                        $self->string('help_stub')));
+            }
         } elsif($is_friendly &&
                 $msg =~ /^\s*are\s+you\s+still\s+there\s*\?\s*$/i) {
              $self->privmsg($target, $self->string('its_me'));
-        } elsif($is_friendly &&
-                $msg =~
-                /^(?:
-                        (?:$self->{nick})[:,\s]\s*)?
+        } elsif($is_friendly && $msg =~ /
+                        ^
                         say\s+my\s+name[,\s]\s*
-                        say\s+my\s+name\s*[\.!1]*\s*$/ix) {
+                        say\s+my\s+name\s*[\.!1]*\s*
+                        $
+                        /ix) {
             $self->privmsg($target, $self->personalize(
                     $target, $nick,
                     $self->string('say_my_name')));
