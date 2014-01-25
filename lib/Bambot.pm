@@ -30,6 +30,7 @@ use constant {
     DEFAULT_NICK => 'bambot',
     DEFAULT_REALNAME => 'Unknown',
     DEFAULT_USERNAME => 'unknown',
+    TRUNCATE_LENGTH => 512,
 };
 
 our ($EST, $VERSION);
@@ -175,6 +176,10 @@ EOF
 
 sub auto_response {
     my ($self, @responses) = @_;
+
+    @responses = map
+            substr($_, 0, min(TRUNCATE_LENGTH, length)),
+            @responses;
 
     $self->send(@responses);
 
