@@ -794,14 +794,18 @@ sub process_server_message {
             eval {
                 if(my ($old_msg_ref) = map \$_,
                         (grep /$pat/, @$log)[-1]) {
+                    my $msg = $$old_msg_ref;
+
                     if($glob) {
-                        $$old_msg_ref =~ s/$pat/\x02$rep\x0F/g;
+                        $$old_msg_ref =~ s/$pat/$rep/g;
+                        $msg =~ s/$pat/\x02$rep\x0F/g;
                     } else {
-                        $$old_msg_ref =~ s/$pat/\x02$rep\x0F/;
+                        $$old_msg_ref =~ s/$pat/$rep/;
+                        $msg =~ s/$pat/\x02$rep\x0F/;
                     }
 
                     $self->privmsg($target,
-                            "$nick meant to say: $$old_msg_ref");
+                            "$nick meant to say: $msg");
                 }
             };
 
