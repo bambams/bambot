@@ -48,7 +48,7 @@ use File::Slurp qw(edit_file slurp);
 use IO::Handle;
 use IO::Select;
 use IO::Socket::INET;
-use List::Util qw(max);
+use List::Util qw(min);
 
 my @submodules = qw(
     Bambot::Ident
