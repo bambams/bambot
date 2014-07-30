@@ -773,6 +773,10 @@ sub process_server_message {
                 $self->privmsg($target, $self->personalize(
                         $target, $nick,
                         $self->string('help_stub')));
+            } elsif($msg =~ /\?\s*$/) {
+                $self->privmsg($target, $self->personalize(
+                        $target, $nick,
+                        $self->string('dont_know')));
             }
         } elsif($is_friendly &&
                 $msg =~ /^\s*are\s+you\s+still\s+there\s*\?\s*$/i) {

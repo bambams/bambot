@@ -41,6 +41,7 @@ our %strings = (
         'Lush! >_>',
         'Why ride the wagon when you can walk...? ::)',
     ],
+    dont_know => q/I honestly don't know./,
     its_me => q/Don't shoot, it's me!/,
     help_stub => q/You're gonna need it./,
     loaded_config => q/Nom, nom, nom, ... that's some good config!/,
