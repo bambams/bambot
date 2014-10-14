@@ -828,8 +828,88 @@ sub process_server_message {
             $self->privmsg($target, $self->personalize(
                     $target, $nick,
                     $self->string('alcholic')));
-        } elsif($is_friendly && $msg =~ /^~\s+\S/) {
-            $self->privmsg($target, $self->string('query_stub'));
+        } elsif($is_friendly && $msg =~ /^~\s+(.*)/) {
+            $msg = $1;
+
+            # h4x: Calculate mileage from distance and fuel consumption...
+            # Hard-coded because this is a quick hack and I don't have
+            # time to properly refactor Bambot right now.
+            if($msg =~ m{
+                    ^
+                    (
+                      [0-9]*\.[0-9]+
+                      |
+                      [0-9]+
+                    )
+                    \s*
+                    (
+                      l(?:it(?:re|er)(?:s)?)?
+                      |
+                      ga(?:llon(?:s)?)?
+                    )
+                    \s+
+                    (
+                      [0-9]*\.[0-9]+
+                      |
+                      [0-9]+
+                    )
+                    \s*
+                    (
+                      kilometer(?:s)?
+                      |
+                      km
+                      |
+                      mi(?:le(?:s)?)?
+                    )
+                    (?:
+                      \s*
+                      (
+                        l(?:/100km)?
+                        |
+                        m(?:pg)?
+                      )
+                    )?
+                    \s*
+                    $
+                    }x) {
+                my %default_output_units = (k => 'l/100km', m => 'mpg');
+
+                my ($v, $vu, $d, $du, $ou) = ($1, $2, $3, $4, $5);
+
+                my $ndu = substr($du, 0, 1);
+                my $nvu = substr($vu, 0, 1);
+
+                $ou //= $default_output_units{$ndu};
+                my $nou = substr($ou, 0, 1);
+
+                my $ga2l = sub { $_[0] * 3.785411784 };
+                my $mi2km = sub { $_[0] * 1.6093472 };
+
+                my $nd = ($ndu eq 'k') ? $d : $mi2km->($d);
+                my $nv = ($nvu eq 'l') ? $v : $ga2l->($v);
+
+                my $vd2l100km = sub { $_[0] / $_[1] * 100 };
+
+                my $no = $vd2l100km->($v, $d);
+
+                my $l100km2mpg = sub { 235.214 / $_[0] };
+
+                my $o = ($nou eq 'l') ? $no : $l100km2mpg->($no);
+
+                $self->privmsg(
+                        $target,
+                        $self->string(
+                                'mileage_result',
+                                distance => $d,
+                                distance_unit => $du,
+                                output => $o,
+                                output_unit => $ou,
+                                volume => $v,
+                                volume_unit => $vu,
+                                ));
+            } else {
+                $self->privmsg($target, $self->string('query_stub'));
+            }
         } elsif($is_master && $msg eq '~activate') {
             $self->privmsg($target, 'Sentry mode activated..');
         } elsif($is_master && $msg eq '~deactivate') {

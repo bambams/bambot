@@ -45,6 +45,8 @@ our %strings = (
     its_me => q/Don't shoot, it's me!/,
     help_stub => q/You're gonna need it./,
     loaded_config => q/Nom, nom, nom, ... that's some good config!/,
+    mileage_result =>
+            q/Consuming %{volume} %{volume_unit} by travelling %{distance} %{distance_unit} measures %{output} %{output_unit}./,
     query_stub => q/I could tell you if I wasn't so busy. Sorry.../,
     reload => {
         failure => q/Upgrade failed... I can't even do that right./,
