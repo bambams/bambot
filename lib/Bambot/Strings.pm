@@ -57,9 +57,9 @@ our %strings = (
 );
 
 sub get_string {
-    my ($self, $key) = @_;
+    my ($self, $key, %opts) = @_;
 
-    return scalar $self->get_strings($key);
+    return scalar $self->get_strings($key, %opts);
 }
 
 sub get_strings {
