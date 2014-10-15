@@ -728,8 +728,9 @@ sub process_server_message {
         my $nick = $ident->nick;
         my $is_master = $ident->user eq $self->master->user;
         my $is_friendly = $ident->user ~~ $self->{friendly_idents};
+        my $is_private = $target eq $self->{nick};
 
-        $target = $target eq $self->{nick} ? $nick : $target;
+        $target = $nick if $is_private;
 
         my $log = $self->{log_}{$target}{$ident->user} //= [];
         my $is_ctcp = $msg =~ /^\001(.*)\001/;
@@ -793,7 +794,7 @@ sub process_server_message {
         }
         elsif($is_friendly &&
                 $msg =~ m[^.*\\o/\s*$] &&
-                ($target eq $nick || $personalized_for_me)) {
+                ($is_private || $personalized_for_me)) {
             $self->privmsg($target,
                     $self->personalize($target, $nick, "\\o/"));
         } elsif($is_friendly && $is_substitution) {
