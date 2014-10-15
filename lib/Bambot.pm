@@ -892,7 +892,7 @@ sub process_server_message {
 
                 my $no = $vd2l100km->($nv, $nd);
 
-                my $l100km2mpg = sub { 235.214 / $_[0] };
+                my $l100km2mpg = sub { 235.214583333333 / $_[0] };
 
                 my $o = ($nou eq 'l') ? $no : $l100km2mpg->($no);
 
