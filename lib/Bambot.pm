@@ -890,7 +890,7 @@ sub process_server_message {
 
                 my $vd2l100km = sub { $_[0] / $_[1] * 100 };
 
-                my $no = $vd2l100km->($v, $d);
+                my $no = $vd2l100km->($nv, $nd);
 
                 my $l100km2mpg = sub { 235.214 / $_[0] };
 
