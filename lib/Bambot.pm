@@ -241,6 +241,19 @@ sub ctcp {
     return "\001$msg\001";
 }
 
+sub do_magic {
+    my ($self, $msg, $ident) = @_;
+
+    my $new_friendly_ident = $self->is_magic($msg, $ident);
+    my $nick = $ident->nick;
+
+    $self->log("WARNING: Adding '$new_friendly_ident' to " .
+            "friendly_idents because $nick spoke the magic " .
+            "words!");
+
+    push @{$self->{friendly_idents}}, $new_friendly_ident;
+}
+
 sub exec_reminders {
     my ($self) = @_;
 
@@ -360,6 +373,25 @@ sub init {
     }
 
     return $self;
+}
+
+sub is_magic {
+    my ($self, $msg, $ident) = @_;
+
+    my $magic_words = $self->{magic_words};
+    my $magic_len = length($magic_words);
+
+    my $is_magic = $msg =~ /^\Q$magic_words\E(.*)/;
+
+    $self->log("<<<$msg>>> =~ /^\Q$magic_words(.*)/");
+
+    return $is_magic unless $is_magic;
+
+    my ($new_friendly_ident) = $1 =~ /^(?:\s+\(([^\s]+)\))?\s*$/;
+
+    $new_friendly_ident ||= $ident->user;
+
+    return $new_friendly_ident;
 }
 
 sub join_channel {
@@ -768,6 +800,8 @@ sub process_server_message {
             } elsif($ctcp =~ /^PING\b/) {
                 $self->notice($nick, $self->ctcp("PONG"));
             }
+        } elsif($is_private && $self->is_magic($msg, $ident)) {
+            $self->do_magic($msg, $ident);
         } elsif($is_friendly &&
                 $personalized_for_me) {
             if($msg eq "help") {
