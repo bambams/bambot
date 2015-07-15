@@ -575,15 +575,15 @@ sub new {
     my $self = {
         %$config,
         channels => [],
-        select_timeout => DEFAULT_SELECT_TIMEOUT,
         creation_date => DateTime->now(),
         friendly_idents => [],
-        on_ => 0,
         logger_ => $rotator,
         master_nicks => [],
         max_urls => DEFAULT_MAX_URLS,
+        on_ => 0,
         random_ => Bambot::Random->new(),
         reminders_ => {},
+        select_timeout => DEFAULT_SELECT_TIMEOUT,
         selector_ => $selector,
         strings_ => Bambot::Strings->new(),
     };
