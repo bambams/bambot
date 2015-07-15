@@ -32,6 +32,8 @@ bambot - A simple^Wsarcastic IRC bot.
   bambot [ -F | --file=FILE ] [ -L | --logdir=DIR ] [ -l | --log ]
          [ --noshenanigans ] [ -v | --verbose ]
 
+    --compress          Compress old log files and exit.
+
     -F, --file=FILE     Specify an alternative config file.
 
     -L, --logdir=DIR    Specify an alternative log directory.
@@ -100,6 +102,7 @@ my %config = (
 );
 
 my %opts = (
+    'compress' => \$config{compress},
     'F|file=s' => \$config{config_file},
     'L|logdir=s' => \$config{log_dir},
     'l|log' => \$config{view_log},
@@ -110,6 +113,10 @@ my %opts = (
 );
 
 GetOptionsFromArray(\@ARGV, %opts) or exit 1;
+
+if($config{compress}) {
+    compress(\%config);
+}
 
 if($config{view_log}) {
     view_log(\%config);
@@ -123,6 +130,23 @@ BEGIN {
     $SIG{USR1} = sub {
         $bambot->log(($bambot->reload)[1]);
     };
+}
+
+sub compress {
+    my ($config) = @_;
+
+    require File::Write::Rotate;
+    my $rotator = File::Write::Rotate->new(
+            $config->{log_dir},
+            histories => 500,
+            prefix => 'bambot',
+            size => 1024 ** 2,
+            suffix => '.log',
+            );
+
+    $rotator->compress();
+
+    exit(0);
 }
 
 sub view_log {

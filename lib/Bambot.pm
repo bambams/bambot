@@ -567,9 +567,6 @@ sub new {
             suffix => '.log',
             );
 
-    # Compress old log files.
-    $rotator->compress();
-
     my $selector = IO::Select->new(\*STDIN);
 
     my $self = {
@@ -1324,9 +1321,6 @@ MAIN:
     }
 
     $self->close();
-
-    # Compress old log files.
-    $self->{logger_}->compress();
 
     return $self;
 }
