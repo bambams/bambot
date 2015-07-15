@@ -26,6 +26,7 @@ use version;
 use utf8;
 
 use constant {
+    DEFAULT_SELECT_TIMEOUT => (60 * 5),
     DEFAULT_MAX_URLS => 5,
     DEFAULT_NICK => 'bambot',
     DEFAULT_REALNAME => 'Unknown',
@@ -571,6 +572,7 @@ sub new {
     my $self = {
         %$config,
         channels => [],
+        select_timeout => DEFAULT_SELECT_TIMEOUT,
         creation_date => DateTime->now(),
         friendly_idents => [],
         on_ => 0,
@@ -609,6 +611,16 @@ sub personalize {
     my ($self, $target, $nick, $msg) = @_;
 
     return ($target eq $nick ? "" : "$nick: ") . "$msg";
+}
+
+sub ping {
+    my ($self) = @_;
+
+    my $target = $self->master->nick;
+
+    $self->notice($target, $self->ctcp("PING"));
+
+    return $self;
 }
 
 sub privmsg {
@@ -1252,42 +1264,56 @@ MAIN:
             $self->log("Sleeping for $timeout seconds...", verbose=>1);
         }
 
+        # h4x: Automatically varify the health of IRC connection every 5
+        # minutes.
+        my $select_timeout = $self->{select_timeout};
+
+        if(($timeout // $select_timeout) > $select_timeout) {
+            $timeout = $select_timeout;
+        }
+
         my @handles = $selector->can_read($timeout);
 
-        for my $rh (@handles) {
-            my $msg = <$rh>;
+        if (@handles) {
+            for my $rh (@handles) {
+                my $msg = <$rh>;
 
-            unless(defined $msg) {
-                $self->log('We appear to have been disconnected...');
-                $self->reconnect();
+                unless(defined $msg) {
+                    $self->log('We appear to have been disconnected...');
+                    $self->reconnect();
 
-                next;
+                    next;
+                }
+
+                my $now = DateTime->now();
+
+                chomp $msg;
+
+                $msg =~ tr/\r//d;
+
+                next if $msg =~ /^\s*$/;
+
+                if($rh == $sock) {
+                    $self->log('Reading from socket...', verbose => 1);
+
+                    $self->process_server_message($msg, $now);
+                } elsif($rh == \*STDIN) {
+                    $self->log('Reading from stdin...', verbose => 1);
+                    $self->log($msg, handle => \*STDOUT, level => 'STDIN');
+
+                    $self->process_client_command($msg, $now) or last MAIN;
+                } else {
+                    $self->log('Unknown handle...', verbose => 1);
+
+                    print Data::Dumper->Dump(
+                            [\*STDIN, $sock, $rh],
+                            [qw(STDIN sock rh)]);
+                }
             }
-
-            my $now = DateTime->now();
-
-            chomp $msg;
-
-            $msg =~ tr/\r//d;
-
-            next if $msg =~ /^\s*$/;
-
-            if($rh == $sock) {
-                $self->log('Reading from socket...', verbose => 1);
-
-                $self->process_server_message($msg, $now);
-            } elsif($rh == \*STDIN) {
-                $self->log('Reading from stdin...', verbose => 1);
-                $self->log($msg, handle => \*STDOUT, level => 'STDIN');
-
-                $self->process_client_command($msg, $now) or last MAIN;
-            } else {
-                $self->log('Unknown handle...', verbose => 1);
-
-                print Data::Dumper->Dump(
-                        [\*STDIN, $sock, $rh],
-                        [qw(STDIN sock rh)]);
-            }
+        } else {
+            # Timeout waiting for activity. Let's just make sure our
+            # server connection is healthy.
+            $self->ping();
         }
 
         $self->exec_reminders();
@@ -1310,6 +1336,8 @@ sub send {
 
     unless(defined $sock) {
         $self->log('Cannot send: socket undefined.');
+
+        $self->reconnect();
 
         return $self;
     }
