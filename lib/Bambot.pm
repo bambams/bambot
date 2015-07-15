@@ -577,6 +577,7 @@ sub new {
         channels => [],
         creation_date => DateTime->now(),
         friendly_idents => [],
+        initial_version => $Bambot::VERSION,
         logger_ => $rotator,
         master_nicks => [],
         max_urls => DEFAULT_MAX_URLS,
@@ -713,7 +714,7 @@ sub process_client_command {
         $self->log(sprintf "verbose: %s",
                 $self->{verbose} ? "yes" : "no");
     } elsif($command =~ m{^/version$}) {
-        $self->log(Bambot::version_str(), handle => \*STDOUT);
+        $self->log($self->version_str(), handle => \*STDOUT);
     } elsif($command =~ m{^/who ([#&]\S+)}) {
         my $channel_name = $1;
         my $nicks = $self->{nicks};
@@ -1036,7 +1037,7 @@ sub process_server_message {
             $self->privmsg($target, $self->get_uptime_str());
         } elsif($is_friendly && $msg eq '~version') {
             $self->privmsg($target, $self->personalize($target, $nick,
-                    Bambot::version_str()));
+                    $self->version_str()));
         } elsif($msg =~ /\bmadness\b/i && $target =~ /^[#&]/) {
             if(int rand 4 == 0) {
                 $self->privmsg($target,
@@ -1246,7 +1247,7 @@ sub run {
 
     STDOUT->autoflush(1);
 
-    $self->log(Bambot::version_str(), handle => \*STDOUT);
+    $self->log($self->version_str(), handle => \*STDOUT);
 
 MAIN:
     while(1) {
@@ -1418,7 +1419,17 @@ sub unload_submodules {
 }
 
 sub version_str {
-    return "This is Bambot v$Bambot::VERSION.";
+    my ($self) = @_;
+    my $initial = $self->{initial_version};
+    my $version =$Bambot::VERSION;
+
+    my $str = "This is Bambot v$initial";
+
+    if ($version ne $initial) {
+        $str .= " (hot-swapped with v$self->{initial_version}).";
+    }
+
+    return $str;
 }
 
 sub write_pid_file {
