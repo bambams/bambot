@@ -376,6 +376,13 @@ sub init {
     return $self;
 }
 
+sub is_friendly {
+    my ($self, $user) = @_;
+    my $friendlies = $self->{friendly_idents};
+
+    return grep $user eq $_, @$friendlies;
+}
+
 sub is_magic {
     my ($self, $msg, $ident) = @_;
 
@@ -496,51 +503,47 @@ sub log {
 sub ls {
     my ($self, $target, $what, $params) = @_;
 
-    for ($what) {
-        when('nicks') {
-            if($params =~ /^([#&]\w+)/) {
-                return $self->get_nicks($1);
-            } else {
-                $! = custom_errstr "Invalid arguments: $params";
+    if($what eq 'nicks') {
+        if($params =~ /^([#&]\w+)/) {
+            return $self->get_nicks($1);
+        } else {
+            $! = custom_errstr "Invalid arguments: $params";
 
-                return;
-            }
+            return;
         }
+    } elsif($what eq 'reminders') {
+        my ($nick) = $params =~ /^(\S+)/;
 
-        when('reminders') {
-            my ($nick) = $params =~ /^(\S+)/;
+        unless(defined $nick) {
+            $! = custom_errstr "Invalid arguments: $params";
 
-            unless(defined $nick) {
-                $! = custom_errstr "Invalid arguments: $params";
+            return;
+        };
 
-                return;
-            };
+        my $privates = 0;
 
-            my $privates = 0;
+        my @reminders =
+                map { my $id = substr($_->id, 0, 6); "$id: $_" }
+                grep {
+                    if($_->target eq $nick && $target ne $nick) {
+                        $privates++;
+                        0;
+                    } else {
+                        1;
+                    }
+                } $self->get_reminders($nick);
 
-            my @reminders =
-                    map { my $id = substr($_->id, 0, 6); "$id: $_" }
-                    grep {
-                        if($_->target eq $nick && $target ne $nick) {
-                            $privates++;
-                            0;
-                        } else {
-                            1;
-                        }
-                    } $self->get_reminders($nick);
+        if(@reminders || $privates) {
+            unshift @reminders,
+                    "$privates private reminders." if $privates;
 
-            if(@reminders || $privates) {
-                unshift @reminders,
-                        "$privates private reminders." if $privates;
+            unshift @reminders, "Remaining reminders for $nick:";
 
-                unshift @reminders, "Remaining reminders for $nick:";
+            return @reminders;
+        } else {
+            $! = custom_errstr "No reminders found for $nick.";
 
-                return @reminders;
-            } else {
-                $! = custom_errstr "No reminders found for $nick.";
-
-                return;
-            }
+            return;
         }
     }
 }
@@ -771,7 +774,7 @@ sub process_server_message {
         my $ident = Bambot::Ident->new($sender);
         my $nick = $ident->nick;
         my $is_master = $ident->user eq $self->master->user;
-        my $is_friendly = $ident->user ~~ $self->{friendly_idents};
+        my $is_friendly = $self->is_friendly($ident->user);
         my $is_private = $target eq $self->{nick};
 
         $target = $nick if $is_private;
@@ -1195,48 +1198,46 @@ sub remind {
 sub rm {
     my ($self, $what, $params) = @_;
 
-    for ($what) {
-        when('reminder') {
-            my ($ident, $id) = $params =~ /^(\S+)\s+([A-Za-z0-9]{1,40})/;
+    if($what eq 'reminder') {
+        my ($ident, $id) = $params =~ /^(\S+)\s+([A-Za-z0-9]{1,40})/;
 
-            $ident = Bambot::Ident->new($ident);
+        $ident = Bambot::Ident->new($ident);
 
-            my $is_master = $ident->user eq $self->master->user;
-            my $nick = $ident->nick;
+        my $is_master = $ident->user eq $self->master->user;
+        my $nick = $ident->nick;
 
-            unless(defined $id) {
-                $! = custom_errstr
-                        "Invalid params: Reminder id was not specified.";
+        unless(defined $id) {
+            $! = custom_errstr
+                    "Invalid params: Reminder id was not specified.";
 
-                return;
-            }
-
-            my $reminders = $self->{reminders_};
-            my @ids = sort map $_->id, grep {
-                        ($is_master || $_->nick eq $nick) &&
-                        $id eq substr($_->id, 0, length $id)
-                    } values %$reminders;
-
-            if(@ids > 1) {
-                @ids = sort { $a cmp $b } @ids;
-
-                $! = custom_errstr "Ambiguous id: @ids";
-
-                return;
-            }
-
-            unless(@ids) {
-                $! = custom_errstr "Reminder $id not found.";
-
-                return;
-            }
-
-            $id = $ids[0];
-
-            delete $reminders->{$id};
-
-            return "Removed reminder $id.";
+            return;
         }
+
+        my $reminders = $self->{reminders_};
+        my @ids = sort map $_->id, grep {
+                    ($is_master || $_->nick eq $nick) &&
+                    $id eq substr($_->id, 0, length $id)
+                } values %$reminders;
+
+        if(@ids > 1) {
+            @ids = sort { $a cmp $b } @ids;
+
+            $! = custom_errstr "Ambiguous id: @ids";
+
+            return;
+        }
+
+        unless(@ids) {
+            $! = custom_errstr "Reminder $id not found.";
+
+            return;
+        }
+
+        $id = $ids[0];
+
+        delete $reminders->{$id};
+
+        return "Removed reminder $id.";
     }
 }
 
