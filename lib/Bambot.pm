@@ -1426,7 +1426,7 @@ sub version_str {
     my $str = "This is Bambot v$initial";
 
     if ($version ne $initial) {
-        $str .= " (hot-swapped with v$self->{initial_version}).";
+        $str .= " (hot-swapped with v$version).";
     }
 
     return $str;
