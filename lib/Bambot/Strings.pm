@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # 
 # bambot is a simple^Wsarcastic IRC bot.
-# Copyright (C) 2011-2013 Brandon McCaig
+# Copyright (C) 2011-2015 Brandon McCaig
 # 
 # This file is part of bambot.
 # 
