@@ -14,6 +14,7 @@ WriteMakefile(
             'Data::Dumper' => 0,
             'DateTime' => 0,
             'DateTime::Format::Duration' => 0,
+            'DateTime::Format::ISO8601' => 0,
             'DateTime::Format::Natural' => 0,
             'Digest::SHA1' => 0,
             'Errno::AnyString' => 0,
