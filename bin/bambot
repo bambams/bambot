@@ -153,18 +153,24 @@ sub view_log {
     my ($config) = @_;
 
     my $fn = "$config->{log_dir}/bambot.log";
-
     my $pager = $ENV{PAGER} // 'less';
 
-    { exec($pager, '--', $fn) };
-
-    say STDERR "Couldn't exec pager '$pager'...",
-            " Falling back to manual STDOUT cat.";
-
     open my $fh, '< :encoding(UTF-8)', $fn or die "open: $fn: $!";
-    print map $_, <$fh> or
-            warn "read: $fn: $!";
-    close $fh or die "close: $fn: $!";
+    open my $ofh, '|- :encoding(UTF-8)', $pager or warn "pipe: $pager: $!";
+
+    if(! defined $ofh) {
+        say STDERR "Couldn't pipe to pager '$pager'...",
+                " Falling back to STDOUT.";
+        $ofh = \*STDOUT;
+    }
+
+    print $ofh <$fh>;
+
+    close $fh or warn "close: $fn: $!";
+
+    if($ofh != \*STDOUT) {
+        close $ofh or warn "close pipe: $pager: $!";
+    }
 
     exit 0;
 }
