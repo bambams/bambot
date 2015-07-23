@@ -1277,38 +1277,54 @@ MAIN:
 
         if (@handles) {
             for my $rh (@handles) {
-                my $msg = <$rh>;
+                my $isSocket = $rh == $sock;
+                my $isStdin = $rh == \*STDIN;
 
-                unless(defined $msg) {
-                    $self->log('We appear to have been disconnected...');
-                    $self->reconnect();
+                my $type = $isSocket ? 'socket' :
+                           $isStdin ?  'stdin'  :
+                                       'unknown';
 
-                    next;
-                }
+                eval {
+                    my $msg = <$rh>;
 
-                my $now = DateTime->now();
+                    unless(defined $msg) {
+                        $self->log('We appear to have been disconnected...');
+                        $self->reconnect();
 
-                chomp $msg;
+                        next;
+                    }
 
-                $msg =~ tr/\r//d;
+                    my $now = DateTime->now();
 
-                next if $msg =~ /^\s*$/;
+                    chomp $msg;
 
-                if($rh == $sock) {
-                    $self->log('Reading from socket...', verbose => 1);
+                    $msg =~ tr/\r//d;
 
-                    $self->process_server_message($msg, $now);
-                } elsif($rh == \*STDIN) {
-                    $self->log('Reading from stdin...', verbose => 1);
-                    $self->log($msg, handle => \*STDOUT, level => 'STDIN');
+                    next if $msg =~ /^\s*$/;
 
-                    $self->process_client_command($msg, $now) or last MAIN;
-                } else {
-                    $self->log('Unknown handle...', verbose => 1);
+                    if($isSocket) {
+                        $self->log('Reading from socket...', verbose => 1);
 
-                    print Data::Dumper->Dump(
-                            [\*STDIN, $sock, $rh],
-                            [qw(STDIN sock rh)]);
+                        $self->process_server_message($msg, $now);
+                    } elsif($isStdin) {
+                        $self->log('Reading from stdin...', verbose => 1);
+                        $self->log($msg, handle => \*STDOUT, level => 'STDIN');
+
+                        $self->process_client_command($msg, $now) or last MAIN;
+                    } else {
+                        $self->log('Unknown handle...', verbose => 1);
+
+                        print Data::Dumper->Dump(
+                                [\*STDIN, $sock, $rh],
+                                [qw(STDIN sock rh)]);
+                    }
+                };
+
+                if($@) {
+                    $self->log(sprintf
+                            'Unhandled exception caught for %s handle: %s',
+                            $type,
+                            $@);
                 }
             }
         } else {
