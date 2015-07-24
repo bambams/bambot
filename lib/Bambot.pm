@@ -1291,7 +1291,8 @@ MAIN:
 
         my @handles = $selector->can_read($timeout);
 
-        $self->log("I awake from my slumber to do my chores.");
+        $self->log("I awake from my slumber to do my chores.",
+                verbose => 1);
 
         if (@handles) {
             for my $rh (@handles) {
