@@ -90,7 +90,7 @@ sub get_strings {
         $value =~ s/\Q%{$_}/$opts{$_}/;
     }
 
-    my @missing_params = $value =~ /%{(\w+)}/g;
+    my @missing_params = $value =~ /%\{(\w+)}/g;
 
     if(@missing_params) {
         croak "The string '$key' requires the following parameters: " .
