@@ -486,17 +486,18 @@ sub load_pwd {
 sub log {
     my ($self, $message, %opts) = @_;
 
-    return $self if $opts{verbose} && !$self->{verbose};
+    my $handle = $opts{handle} // \*STDERR;
+    my $level = $opts{level} // 'DIAGNOSTIC';
+    my $verbose = $opts{verbose} // 0;
 
-    $opts{handle} //= \*STDERR;
-    $opts{level} //= 'DIAGNOSTIC';
+    return $self if $verbose && !$self->{verbose};
 
     my $now = DateTime->now();
 
-    $message = "$now $$ $opts{level}: $message\n";
+    $message = "$now $$ $level: $message\n";
 
     $self->{logger_}->write(encode('UTF-8', $message));
-    $opts{handle}->print($message);
+    $handle->print($message);
 
     return $self;
 }
