@@ -221,4 +221,3 @@ sub view_log {
 
     exit 0;
 }
-
