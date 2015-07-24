@@ -809,8 +809,19 @@ sub process_server_message {
             $self->log("CTCP: $ctcp", verbose => 1);
 
             if($ctcp eq 'VERSION') {
+                my $initial = $self->{initial_version};
+                my $version = $Bambot::VERSION;
+
+                my $str = "Bambot v$initial";
+
+                if($version ne $initial) {
+                    $str .= " (hotswapped v$version)";
+                }
+
+                $str .= " / Perl $PERL_VERSION";
+
                 $self->notice($nick,
-                        $self->ctcp("VERSION bambot:$VERSION:perl $]"));
+                        $self->ctcp("VERSION $str"));
             } elsif($ctcp =~ /^PING\b/) {
                 $self->notice($nick, $self->ctcp("PONG"));
             }
