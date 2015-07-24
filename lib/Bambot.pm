@@ -490,14 +490,19 @@ sub log {
     my $level = $opts{level} // 'DIAGNOSTIC';
     my $verbose = $opts{verbose} // 0;
 
-    return $self if $verbose && !$self->{verbose};
-
     my $now = DateTime->now();
+
+    if($verbose) {
+        $level .= '|VERBOSE';
+    }
 
     $message = "$now $$ $level: $message\n";
 
     $self->{logger_}->write(encode('UTF-8', $message));
-    $handle->print($message);
+
+    unless ($verbose && !$self->{verbose}) {
+        $handle->print($message);
+    }
 
     return $self;
 }
