@@ -153,23 +153,23 @@ sub compress {
 sub localize_time {
     state $format = DateTime::Format::ISO8601->new();
 
-    my ($line, $timezone) = @_;
+    my ($utc, $timezone) = @_;
 
-    return $line unless defined $timezone;
+    return $utc unless defined $timezone;
 
-    my $utc = substr($line, 0, 19);
+    my $dt = eval {
+        $format->parse_datetime($utc . 'Z');
+    };
 
-    my $dt = eval { $format->parse_datetime($utc . 'Z'); };
-
-    unless($@) {
-        $dt->set_time_zone($timezone);
-
-        my $local = $dt->iso8601();
-
-        substr($line, 0, 19) = $local;
+    if($@) {
+        return $utc;
     }
 
-    return $line;
+    $dt->set_time_zone($timezone);
+
+    my $local = $dt->iso8601();
+
+    return $local;
 }
 
 sub view_log {
@@ -190,9 +190,23 @@ sub view_log {
     my $timezone = $bambot->{timezone};
 
     while(defined(my $line = <$fh>)) {
-        my $localized_line = localize_time($line, $timezone);
+        if(my ($utc, $pid, $diagnostic, $verbose, $message) =
+                $line =~ /^
+                        ([-0-9T:]{19})
+                        \s
+                        ([0-9]{5})
+                        \s
+                        (\w+)
+                        (\|VERBOSE)?
+                        :
+                        \s
+                        (.*)/x) {
+            my $localtime = localize_time($utc, $timezone);
 
-        print $ofh $localized_line;
+            substr($line, 0, 19) = $localtime;
+        }
+
+        print $ofh $line;
     }
 
     close $fh or warn "close: $fn: $!";
