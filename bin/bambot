@@ -151,12 +151,13 @@ sub compress {
 }
 
 sub localize_time {
+    state $format = DateTime::Format::ISO8601->new();
+
     my ($line, $timezone) = @_;
 
     return $line unless defined $timezone;
 
     my $utc = substr($line, 0, 19);
-    my $format = DateTime::Format::ISO8601->new();
 
     my $dt = eval { $format->parse_datetime($utc . 'Z'); };
 
