@@ -55,6 +55,7 @@ use List::Util qw(min);
 my @submodules = qw(
     Bambot::Ident
     Bambot::Random
+    Bambot::ReloadSignal
     Bambot::Reminder
     Bambot::Strings
     Bambot::Version
@@ -588,6 +589,7 @@ sub new {
         on_ => 0,
         random_ => Bambot::Random->new(),
         reminders_ => {},
+        run_depth_ => 0,
         select_timeout => DEFAULT_SELECT_TIMEOUT,
         selector_ => $selector,
         strings_ => Bambot::Strings->new(),
@@ -687,7 +689,7 @@ sub process_client_command {
     } elsif($command =~ m{^/register}) {
         $self->register();
     } elsif($command =~ m{^/reload$}) {
-        $self->log(($self->reload)[1]);
+        $self->reload('console');
     } elsif($command =~ m{^/remind
             \s+(\S+)
             \s+([#&]\w+|private)
@@ -1008,7 +1010,7 @@ sub process_server_message {
         } elsif($is_master && $msg eq '~reload') {
             $self->log('Master issued ~reload...');
 
-            $self->privmsg($target, ($self->reload)[1]);
+            $self->reload($target);
         } elsif($is_friendly && $msg =~ /^~remind
                 (?:\s+(\S+))?
                 (?:\s+([#&]\w+|private))?
@@ -1150,7 +1152,7 @@ sub register {
 }
 
 sub reload {
-    my ($self) = @_;
+    my ($self, $source) = @_;
 
     $self->log('Reloading module...');
 
@@ -1169,8 +1171,12 @@ sub reload {
         $status = 0;
     };
 
-    return ($status, $self->string(
-            "reload/" . (qw/failure success/)[$status]));
+    my $message = $self->string(
+            "reload/" . (qw/failure success/)[$status]);
+
+    my $signal = Bambot::ReloadSignal->new($source, $status, $message);
+
+    die $signal;
 }
 
 sub remind {
@@ -1260,6 +1266,8 @@ sub rm {
 sub run {
     my ($self) = @_;
 
+    $self->{run_depth_}++;
+
     STDOUT->autoflush(1);
 
     $self->log($self->version_str(), handle => \*STDOUT);
@@ -1340,10 +1348,30 @@ MAIN:
                 };
 
                 if($@) {
-                    $self->log(sprintf
-                            'Unhandled exception caught for %s handle: %s',
-                            $type,
-                            $@);
+                    my $type = ref $@;
+
+                    # For now we'll use recursion to reload the run
+                    # method.
+                    if ($type eq 'Bambot::ReloadSignal') {
+                        my $message = $@->message;
+                        my $source = $@->source;
+                        my $status = $@->status;
+
+                        if($source eq 'console') {
+                            $self->log($message);
+                        } else {
+                            $self->privmsg($source, $message);
+                        }
+
+                        if ($status) {
+                            return $self->run();
+                        }
+                    } else {
+                        $self->log(sprintf
+                                'Unhandled exception caught for %s handle: %s',
+                                $type,
+                                $@);
+                    }
                 }
             }
         } else {
