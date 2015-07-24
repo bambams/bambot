@@ -43,6 +43,7 @@ use DateTime;
 use DateTime::Format::Duration;
 use DateTime::Format::Natural;
 use Encode;
+use English qw/$PERL_VERSION/;
 use Errno::AnyString qw/custom_errstr/;
 use File::Write::Rotate;
 use File::Slurp qw(edit_file slurp);
@@ -1438,8 +1439,10 @@ sub version_str {
     my $str = "This is Bambot v$initial";
 
     if ($version ne $initial) {
-        $str .= " (hot-swapped with v$version).";
+        $str .= " (hot-swapped with v$version)";
     }
+
+    $str .= " running on Perl $PERL_VERSION.";
 
     return $str;
 }
