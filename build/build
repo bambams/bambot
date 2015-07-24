@@ -50,6 +50,8 @@ fi;
 
 dist="$(get-dist)" || exit $?;
 
+echo -n "Building $dist...";
+
 if [ -f Makefile -a "$force" == y ]; then
     build_log="$(make distclean 2>&1)";
     errno=$?;
@@ -81,4 +83,4 @@ if [ $errno != 0 ]; then
     exit $errno;
 fi;
 
-echo "Building $dist... done.";
+echo "done.";
