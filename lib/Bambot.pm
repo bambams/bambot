@@ -486,7 +486,7 @@ sub load_pwd {
 sub log {
     my ($self, $message, %opts) = @_;
 
-    return if $opts{verbose} && !$self->{verbose};
+    return $self if $opts{verbose} && !$self->{verbose};
 
     $opts{handle} //= \*STDERR;
     $opts{level} //= 'DIAGNOSTIC';
