@@ -201,6 +201,10 @@ sub view_log {
                         :
                         \s
                         (.*)/x) {
+            if ($verbose && !$bambot->{verbose}) {
+                next;
+            }
+
             my $localtime = localize_time($utc, $timezone);
 
             substr($line, 0, 19) = $localtime;
