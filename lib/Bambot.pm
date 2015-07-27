@@ -1285,8 +1285,6 @@ MAIN:
         if(defined $next_reminder && $next_reminder->when > $now) {
             $timeout = $next_reminder->when
                     ->subtract_datetime_absolute($now)->seconds() + 1;
-
-            $self->log("Sleeping for $timeout seconds...", verbose=>1);
         }
 
         # h4x: Automatically varify the health of IRC connection every 5
@@ -1296,6 +1294,8 @@ MAIN:
         if(($timeout // $select_timeout) > $select_timeout) {
             $timeout = $select_timeout;
         }
+
+        $self->log("Sleeping for $timeout seconds...", verbose=>1);
 
         my @handles = $selector->can_read($timeout);
 
