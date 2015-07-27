@@ -1272,6 +1272,9 @@ sub run {
 
     $self->log($self->version_str(), handle => \*STDOUT);
 
+    my $timeout_formatter = DateTime::Format::Duration->new(
+            normalize => 1,
+            pattern => "%r");
 MAIN:
     while(1) {
         my ($sock, $selector) = @$self{qw/sock_ selector_/};
@@ -1295,7 +1298,11 @@ MAIN:
             $timeout = $select_timeout;
         }
 
-        $self->log("Sleeping for $timeout seconds...", verbose=>1);
+        my $friendly_timeout = $timeout_formatter->format_duration_from_deltas(
+                seconds => $timeout);
+
+        $self->log("Sleeping for $timeout seconds ($friendly_timeout)...",
+                verbose=>1);
 
         my @handles = $selector->can_read($timeout);
 
