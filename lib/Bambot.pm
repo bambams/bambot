@@ -1294,7 +1294,7 @@ MAIN:
         # minutes.
         my $select_timeout = $self->{select_timeout};
 
-        if(($timeout // $select_timeout) > $select_timeout) {
+        if(($timeout //= $select_timeout) > $select_timeout) {
             $timeout = $select_timeout;
         }
 
