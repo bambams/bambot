@@ -132,6 +132,42 @@ sub _is_substitution {
     return;
 }
 
+sub about {
+    my ($self, $target) = @_;
+
+    my $about_file = $self->{about_file};
+
+    my $ok = 1;
+
+    my $path = $INC{__PACKAGE__ . '.pm'};
+
+    # Read the copyright notice from the module file.
+    my @lines = map s/^#\s*//r, grep { $ok = $ok && /^#/ } slurp($path);
+
+    # Check for an additional user-specified about file.
+    if(defined $about_file) {
+        unless($about_file =~ m{}) {
+            $about_file = "$ENV{HOME}/.bambot/$about_file";
+        }
+
+        my @about_lines = eval {
+            slurp($about_file);
+        };
+
+        if($@) {
+            $self->log("Failed to open about file: $about_file: $@");
+        } else {
+            push @lines, "\n", @about_lines;
+        }
+    }
+
+    chomp(@lines);
+
+    $_ = ($_ eq '' ? ' ' : $_) for @lines;
+
+    return wantarray ? @lines : \@lines;
+}
+
 sub add_urls {
     my ($self, $msg) = @_;
     my @urls = $msg =~ m{\b(https?://[-A-Za-z0-9_\.:/~\?=%\&#]+)}gi;
@@ -650,7 +686,9 @@ sub pong {
 sub process_client_command {
     my ($self, $command, $time) = @_;
 
-    if($command =~ m{^/ctcp (\S+) (.+)}) {
+    if($command =~ m{^/about$}) {
+        $self->log($_) for $self->about();
+    } elsif($command =~ m{^/ctcp (\S+) (.+)}) {
         $self->privmsg($1, $self->ctcp($2));
     } elsif($command =~ m{^/eval (.+)}) {
         my @results = eval $1 or carp $@;
@@ -978,6 +1016,8 @@ sub process_server_message {
             } else {
                 $self->privmsg($target, $self->string('query_stub'));
             }
+        } elsif($is_master && $msg eq '~about') {
+            $self->privmsg($nick, $_) for $self->about();
         } elsif($is_master && $msg eq '~activate') {
             $self->privmsg($target, 'Sentry mode activated..');
         } elsif($is_master && $msg eq '~deactivate') {
