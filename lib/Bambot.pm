@@ -785,6 +785,13 @@ sub process_server_message {
 
     $self->log($msg, handle => \*STDOUT, level => 'SERVER');
 
+    my $server = $msg =~ /^:([a-z1-9.]+)\s+(NOTICE|[0-9]+)\b/;
+
+    if(defined $server) {
+        $self->{servers}{$server} = 1;
+        $self->{server} = $server;
+    }
+
     if($msg =~ /^PING :?([\w\.]+)/) {
         $self->pong($1);
     } elsif($msg =~ /
