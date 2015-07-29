@@ -662,9 +662,10 @@ sub personalize {
 sub ping {
     my ($self) = @_;
 
-    my $target = $self->master->nick;
+    my $nick = $self->master->nick;
+    my $server = $self->{server};
 
-    $self->notice($target, $self->ctcp("PING"));
+    $self->auto_response("PING $nick :$server");
 
     return $self;
 }
