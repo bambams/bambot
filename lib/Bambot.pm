@@ -146,7 +146,7 @@ sub about {
 
     # Check for an additional user-specified about file.
     if(defined $about_file) {
-        unless($about_file =~ m{}) {
+        unless($about_file =~ m{^/}) {
             $about_file = "$ENV{HOME}/.bambot/$about_file";
         }
 
