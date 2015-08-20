@@ -350,8 +350,10 @@ sub get_nicks {
         return;
     }
 
+    $self->log(Dumper $nicks, verbose=>1);
+
     $nicks = "Nicks in $channel: " .
-            join ' ', grep $nicks->{$_},  keys %$nicks;
+            join ' ', grep $nicks->{$_}{joined}, keys %$nicks;
 
     return $nicks;
 }
@@ -766,10 +768,12 @@ sub process_client_command {
         my $channel = $nicks->{$channel_name};
 
         if(ref $channel eq 'HASH') {
+            $self->log(Dumper $channel, verbose=>1);
+
             $self->log("Believed to be in $channel_name: " .
                     join ', ',
                     sort { $a cmp $b }
-                    grep $channel->{$_}, keys %$channel);
+                    grep $channel->{$_}{joined}, keys %$channel);
         } else {
             $self->log("Not in $channel_name?");
         }
@@ -808,7 +812,12 @@ sub process_server_message {
         $self->log(Dumper {channel=>$channel, nicks=>\@nicks},
                 verbose=>1);
 
-        $self->{nicks}{$channel}{$_} = 1 for @nicks;
+        for my $nick (@nicks) {
+            $self->{nicks}{$channel}{$nick} = {
+                joined => 1,
+                seen => DateTime->now(),
+            };
+        }
     } elsif($msg =~ /^:\S+\s+433\s+\*\s+$self->{nick}
             \s+:Nickname is already in use./x) {
         $self->nickserv_ghost();
@@ -818,7 +827,10 @@ sub process_server_message {
 
         $self->log("$nick ($ident) ${command}ed $channel.", verbose=>1);
 
-        $self->{nicks}{$channel}{$nick} = $command eq 'join' ? 1 : 0;
+        $self->{nicks}{$channel}{$nick} = {
+            joined => ($command eq 'join' ? 1 : 0),
+            seen => DateTime->now(),
+        };
     } elsif($msg =~ /^:(\S+) PRIVMSG (\S+) :?(.*)/) {
         my ($sender, $target, $msg) = ($1, $2, $3);
 
@@ -1144,7 +1156,7 @@ LOG_PRIVMSG:
         for my $channel (keys %$channels) {
             my $nicks = $channels->{$channel} or next;
 
-            $nicks->{$nick} = 0 if $nicks->{$nick};
+            $nicks->{$nick}{joined} = 0 if $nicks->{$nick};
         }
     }
 
@@ -1441,6 +1453,10 @@ MAIN:
     $self->close();
 
     return $self;
+}
+
+sub seen {
+    my ($self, $target, $nick, $channel) = @_;
 }
 
 sub send {
