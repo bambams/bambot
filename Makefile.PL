@@ -26,7 +26,9 @@ WriteMakefile(
             'IO::Handle' => 0,
             'IO::Select' => 0,
             'IO::Socket::INET' => 0,
+            'JSON' => 0,
             'List::Util' => 0,
+            'LWP::UserAgent' => 0,
             'local::lib' => 0,
         },
         VERSION_FROM => 'lib/Bambot/Version.pm');
