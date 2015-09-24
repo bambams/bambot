@@ -368,12 +368,36 @@ sub get_uptime_str {
     my ($self) = @_;
 
     my $now = DateTime->now();
+
+    my $uptime = $now - $self->{creation_date};
+
+    my $pattern = sub {
+        my ($duration) = @_;
+
+        my ($years, $months, $days, $hours, $minutes) =
+                $duration->in_units(qw/years months days hours minutes/);
+
+        my $toggle = 0;
+
+        my $pattern = join ' ', (reverse
+                map $_->[0],
+                grep $_->[1],
+                reverse
+                ['%1y years', $toggle += $years],
+                ['%1m months', $toggle += $months],
+                ['%1e days', $toggle += $days],
+                ['%1H hours', $toggle += $hours],
+                ['%1M minutes', $toggle += $minutes]),
+                '%1s seconds';
+
+        return $pattern;
+    };
+
     my $formatter = DateTime::Format::Duration->new(
             base => $now,
             normalize => 1,
-            pattern => "%e days %H hours %M minutes %S seconds");
+            pattern => $pattern->($uptime));
 
-    my $uptime = $now - $self->{creation_date};
     my $str = sprintf 'Up for %s.', $formatter->format_duration($uptime);
 
     my $last_connected_date = $self->{connected_date}[-1];
@@ -384,6 +408,11 @@ sub get_uptime_str {
 
     return $str if DateTime::Duration->compare(
             $uptime, $connected_duration, $now) == 0;
+
+    $formatter = DateTime::Format::Duration->new(
+            base => $now,
+            normalize => 1,
+            pattern => $pattern->($connected_duration));
 
     $str = $str . sprintf ' Last connected %s ago.',
             $formatter->format_duration($connected_duration);
