@@ -917,8 +917,8 @@ sub process_server_message {
 
                 $self->notice($nick,
                         $self->ctcp("VERSION $str"));
-            } elsif($ctcp =~ /^PING\b/) {
-                $self->notice($nick, $self->ctcp("PONG"));
+            } elsif($ctcp =~ /^PING ([0-9]+)\b/) {
+                $self->notice($nick, $self->ctcp("PING $1"));
             }
         } elsif($is_private && $self->is_magic($msg, $ident)) {
             $self->do_magic($msg, $ident);
