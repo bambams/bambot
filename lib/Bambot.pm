@@ -919,6 +919,15 @@ sub process_server_message {
                         $self->ctcp("VERSION $str"));
             } elsif($ctcp =~ /^PING ([0-9]+)\b/) {
                 $self->notice($nick, $self->ctcp("PING $1"));
+            } elsif($ctcp =~ /^TIME\b/) {
+                my $zone = $self->{timezone};
+                my $tz = DateTime::TimeZone->new(name => $zone);
+                my $localtime = $time->clone();
+
+                $localtime->set_time_zone('UTC');
+                $localtime->set_time_zone($tz);
+
+                $self->notice($nick, $self->ctcp("TIME $localtime"));
             }
         } elsif($is_private && $self->is_magic($msg, $ident)) {
             $self->do_magic($msg, $ident);
