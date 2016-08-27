@@ -900,6 +900,8 @@ sub process_server_message {
             }
         }
 
+        my $re_fuuuuuu = qr/f{1,}u{4,}/i;
+
         if($is_ctcp) {
             $self->log("CTCP: $ctcp", verbose => 1);
 
@@ -931,6 +933,15 @@ sub process_server_message {
             }
         } elsif($is_private && $self->is_magic($msg, $ident)) {
             $self->do_magic($msg, $ident);
+        } elsif($is_friendly && ($personalized_for_me ?
+                $msg =~ /$re_fuuuuuu/i :
+                $msg =~ /$re_fuuuuuu \Q$self->{nick}/)) {
+            my $result = $self->personalize(
+                    $target,
+                    $nick,
+                    "Yeah, I'm sorry, I'm stupid.");
+
+            $self->privmsg($target, $result);
         } elsif($is_friendly &&
                 $personalized_for_me) {
             if($msg eq "help") {
