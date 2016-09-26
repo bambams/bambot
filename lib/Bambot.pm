@@ -1151,10 +1151,10 @@ sub process_server_message {
                     $target, $nick, $self->rm($1, "$sender $2")));
         } elsif($is_friendly &&
                 (
-                    $msg =~ /^~rr/ ||
+                    $msg =~ /^~(?:rr|shoot)(?:\s*$|\s+(\w+))/ ||
                     $msg =~ /Do\s+you\s+feel\s+lucky,?\s+punk?\?/i)
                 ) {
-            $self->russian_roulette($target, $nick);
+            $self->russian_roulette($target, $1 // $nick);
         } elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/) {
             $self->privmsg($target, $self->personalize(
                     $target, $nick,
