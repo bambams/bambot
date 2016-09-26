@@ -1149,6 +1149,12 @@ sub process_server_message {
         } elsif($msg =~ /^~rm\s+(reminder)\s+(.+)/) {
             $self->privmsg($target, $self->personalize(
                     $target, $nick, $self->rm($1, "$sender $2")));
+        } elsif($is_friendly &&
+                (
+                    $msg =~ /^~rr/ ||
+                    $msg =~ /Do\s+you\s+feel\s+lucky,?\s+punk?\?/i)
+                ) {
+            $self->russian_roulette($target, $nick);
         } elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/) {
             $self->privmsg($target, $self->personalize(
                     $target, $nick,
@@ -1502,6 +1508,20 @@ MAIN:
     $self->close();
 
     return $self;
+}
+
+sub russian_roulette {
+    my ($self, $target, $nick) = @_;
+    my $bullet = rand(6);
+
+    $self->privmsg(
+            $target,
+            $self->personalize(
+                    $nick,
+                    "*brrrrrrrrrrrrzzzt* *chk* ... " .
+                    ($bullet ?
+                    "*click* ... Lucky." :
+                    "*BANG* ... He will be missed.")));
 }
 
 sub seen {
