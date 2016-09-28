@@ -1517,17 +1517,16 @@ sub russian_roulette {
 
     $self->privmsg(
             $target,
-            $self->personalize(
-                    $target,
-                    $nick,
-                    "*brrrrrrrrrrrrzzzt* *chk* ... " .
-                    ($bullet ?
-                    "*click* ... " .
-                            ($personalized_for_me ?
-                            "PHEW! Hahaha, that was close." :
-                            "You got lucky, THIS time.") :
-                    "*BANG*" .
-                            ($personalized_for_me ? "" : " ... ... ..."))));
+            "*brrrrrrrrrrrrzzzt* *chk* ... " .
+            ($bullet ?
+            "*click* ... " .
+                    ($personalized_for_me ?
+                    "PHEW! Hahaha, that was close." :
+                    "$nick got lucky, THIS time.") :
+            "*BANG*" .
+                    ($personalized_for_me ?
+                    "" :
+                    " I regret this immediately. Sorry, $nick...")));
 
     if ($personalized_for_me && !$bullet) {
         $self->close();
