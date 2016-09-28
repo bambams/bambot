@@ -1513,6 +1513,7 @@ MAIN:
 sub russian_roulette {
     my ($self, $target, $nick) = @_;
     my $bullet = int rand 6;
+    my $personalized_for_me = $nick eq $self->{nick};
 
     $self->privmsg(
             $target,
@@ -1521,8 +1522,23 @@ sub russian_roulette {
                     $nick,
                     "*brrrrrrrrrrrrzzzt* *chk* ... " .
                     ($bullet ?
-                    "*click* ... You got lucky, THIS time." :
-                    "*BANG* ... ... ...")));
+                    "*click* ... " .
+                            ($personalized_for_me ?
+                            "PHEW! Hahaha, that was close." :
+                            "You got lucky, THIS time.") :
+                    "*BANG*" .
+                            ($personalized_for_me ? "" : " ... ... ..."))));
+
+    if ($personalized_for_me && !$bullet) {
+        $self->close();
+        sleep(60);
+        $self->connect();
+        $self->init();
+
+        if(defined $self->{sock_} and defined $self->master->nick) {
+            $self->privmsg($self->master->nick, 'Revived...');
+        }
+    }
 }
 
 sub seen {
