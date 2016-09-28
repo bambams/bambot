@@ -1151,7 +1151,7 @@ sub process_server_message {
                     $target, $nick, $self->rm($1, "$sender $2")));
         } elsif($is_friendly &&
                 (
-                    $msg =~ /^~(?:rr|shoot)(?:\s*$|\s+(\w+))/ ||
+                    $msg =~ /^~(?:rr|shoot)(?:\s*$|\s+(\S+))/ ||
                     $msg =~ /Do\s+you\s+feel\s+lucky,?\s+punk?\?/i)
                 ) {
             $self->russian_roulette($target, $1 // $nick);
