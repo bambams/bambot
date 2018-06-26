@@ -989,6 +989,8 @@ sub process_server_message {
                     }
 
                     $self->privmsg($target,
+                            $is_private ?
+                            "(I think he meant to say: $msg)" :
                             "$nick meant to say: $msg");
                 }
             };
