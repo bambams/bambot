@@ -1,7 +1,7 @@
 # vim: ft=sh
 
 function get-version {
-    perl -e 'require q{lib/Bambot/Version.pm}; print $Bambot::VERSION' \
+    perl -e 'require q{./lib/Bambot/Version.pm}; print $Bambot::VERSION' \
             2>/dev/null;
 
     if [ $? != 0 ]; then
