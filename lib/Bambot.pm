@@ -426,6 +426,16 @@ sub identify {
 
     if(defined $pwd && length $pwd > 0) {
         $self->privmsg('NickServ', "identify $pwd");
+
+        my $timeout = $self->{identify_sleep_timeout};
+
+        if($timeout) {
+            $self->log("Sleeping for $timeout seconds after identifying...");
+
+            my $time = sleep($timeout);
+
+            $self->log("Slept for $time seconds after identifying...");
+        }
     }
 
     return $self;
