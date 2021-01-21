@@ -1191,7 +1191,8 @@ sub process_server_message {
             }
         } elsif ($is_friendly && $msg eq 'Who shot you?') {
             if (exists $self->{who_shot_me}) {
-                my $killer = $self->{who_shot_me};
+                my $ident = Bambot::Ident->new($self->{who_shot_me});
+                my $killer = $ident->nick;
 
                 $self->privmsg($target,
                         "$killer shot me, but I don't blame them ...");
