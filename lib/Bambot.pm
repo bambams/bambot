@@ -589,7 +589,7 @@ sub ls {
     my ($self, $target, $what, $params) = @_;
 
     if($what eq 'nicks') {
-        if($params =~ /^([#&]\w+)/) {
+        if($params =~ /^([#&]\S+)/) {
             return $self->get_nicks($1);
         } else {
             $! = custom_errstr "Invalid arguments: $params";
@@ -744,7 +744,7 @@ sub process_client_command {
         $self->identify();
     } elsif($command =~ m{^/irc\s+(.+)}) {
         $self->send($1);
-    } elsif($command =~ m{^/j(?:oin)? ([#&]?\w+)}) {
+    } elsif($command =~ m{^/j(?:oin)? ([#&]?\S+)}) {
         $self->join_channel($1);
     } elsif($command =~ m{^/load$}) {
         $self->load;
@@ -756,13 +756,13 @@ sub process_client_command {
         } else {
             $self->log($!);
         }
-    } elsif($command =~ m{^/me ([#&]?\w+) (.+)}) {
+    } elsif($command =~ m{^/me ([#&]?\S+) (.+)}) {
         $self->privmsg($1, $self->ctcp("ACTION $2"));
-    } elsif($command =~ m{^/msg ([#&]?\w+) (.+)}) {
+    } elsif($command =~ m{^/msg ([#&]?\S+) (.+)}) {
         $self->privmsg($1, $2);
     } elsif($command =~ m{^/nick (\w+)}) {
         $self->set_nick($1);
-    } elsif($command =~ m{^/p(?:art)? ([#&]?\w+) (.*)}) {
+    } elsif($command =~ m{^/p(?:art)? ([#&]?\S+) (.*)}) {
         $self->auto_response("PART $1 :$2");
     } elsif($command =~ m{^/quit\s*(.*)}) {
         $self->quit($1);
@@ -772,7 +772,7 @@ sub process_client_command {
         $self->reload('console');
     } elsif($command =~ m{^/remind
             \s+(\S+)
-            \s+([#&]\w+|private)
+            \s+([#&]\S+|private)
             \s+(\S+)
             \s+(\S+)
             \s+(.+)
@@ -1134,7 +1134,7 @@ sub process_server_message {
             $self->reload($target);
         } elsif($is_friendly && $msg =~ /^~remind
                 (?:\s+(\S+))?
-                (?:\s+([#&]\w+|private))?
+                (?:\s+([#&]\S+|private))?
                 \s+(\S+)
                 \s+(\S+)
                 \s+(.+)
