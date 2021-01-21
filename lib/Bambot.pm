@@ -1166,7 +1166,7 @@ sub process_server_message {
                     $msg =~ /^~(?:rr|shoot)(?:\s*$|\s+(\S+))/ ||
                     $msg =~ /Do\s+you\s+feel\s+lucky,?\s+punk?\?/i)
                 ) {
-            $self->russian_roulette($target, $1 // $nick);
+            $self->russian_roulette($sender, $target, $1 // $nick);
         } elsif($is_master && $msg =~ /^~shutdown\s*(.*?)\s*$/) {
             $self->privmsg($target, $self->personalize(
                     $target, $nick,
@@ -1188,6 +1188,16 @@ sub process_server_message {
                         $self->string('spartaaa', target => $target));
             } else {
                 $self->log('Spartan utterance...miss.');
+            }
+        } elsif ($is_friendly && $msg eq 'Who shot you?') {
+            if (exists $self->{who_shot_me}) {
+                my $killer = $self->{who_shot_me};
+
+                $self->privmsg($target,
+                        "$killer shot me, but I don't blame them ...");
+            } else {
+                $self->privmsg($target,
+                        $self->personalize($target, $nick, ));
             }
         } else {
             $self->log("Unrecognized user input from $nick: {{{$msg}}}",
@@ -1523,7 +1533,7 @@ MAIN:
 }
 
 sub russian_roulette {
-    my ($self, $target, $nick) = @_;
+    my ($self, $sender, $target, $nick) = @_;
     my $personalized_for_me = $nick eq $self->{nick};
     my $msg = "";
 
@@ -1550,6 +1560,8 @@ sub russian_roulette {
         $self->{bullet_} = undef;
 
         if ($personalized_for_me) {
+            $self->{who_shot_me} = $sender;
+
             $self->close();
             sleep(60);
             $self->connect();
