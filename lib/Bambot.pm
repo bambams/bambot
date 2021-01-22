@@ -1189,9 +1189,23 @@ sub process_server_message {
             } else {
                 $self->log('Spartan utterance...miss.');
             }
+        } elsif ($is_friendly && $msg eq 'Who shot who?') {
+            if (exists $self->{shooter_}) {
+                my $ident = Bambot::Ident->new($self->{shooter_});
+                my ($killer, $victim) = ($ident->nick, $self->{shot_});
+
+                $self->swap_nick_with_me($killer);
+                $self->swap_nick_with_me($victim);
+
+                $self->privmsg($target,
+                        "$killer shot $victim, but I don't blame them ...");
+            } else {
+                $self->privmsg($target,
+                        $self->personalize($target, $nick, ));
+            }
         } elsif ($is_friendly && $msg eq 'Who shot you?') {
-            if (exists $self->{who_shot_me}) {
-                my $ident = Bambot::Ident->new($self->{who_shot_me});
+            if (exists $self->{shooter_}) {
+                my $ident = Bambot::Ident->new($self->{shooter_});
                 my $killer = $ident->nick;
 
                 $self->privmsg($target,
@@ -1561,7 +1575,8 @@ sub russian_roulette {
         $self->{bullet_} = undef;
 
         if ($personalized_for_me) {
-            $self->{who_shot_me} = $sender;
+            $self->{shot_} = $nick;
+            $self->{shooter_} = $sender;
 
             $self->close();
             sleep(60);
@@ -1651,6 +1666,22 @@ sub strings {
     my ($self, $key, %opts) = @_;
 
     return $self->{strings_}->get_strings($key, %opts);
+}
+
+# Danger: we are modifying the caller's variable in place here (but only if
+# called simply).
+sub swap_nick_with_me {
+    my ($self) = @_;
+
+    unless (defined $_[1]) {
+        return ($_[1] = '');
+    }
+
+    if ($_[1] eq $self->master->nick) {
+        $_[1] = 'me';
+    }
+
+    return $_[1];
 }
 
 sub unlink_pid_file {
