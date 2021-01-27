@@ -1193,8 +1193,8 @@ sub process_server_message {
             my $whom = lc($1);
             if ($whom eq 'who') {
                 if (exists $self->{shooter_}) {
-                    my $ident = Bambot::Ident->new($self->{shooter_});
-                    my ($killer, $victim) = ($ident->nick, $self->{shot_});
+                    my $killer_ident = Bambot::Ident->new($self->{shooter_});
+                    my ($killer, $victim) = ($killer_ident->nick, $self->{shot_});
 
                     $self->swap_nick_with_me($killer);
                     $self->swap_nick_with_me($victim);
@@ -1207,8 +1207,8 @@ sub process_server_message {
                 }
             } elsif ($whom eq 'you') {
                 if (exists $self->{shooter_}) {
-                    my $ident = Bambot::Ident->new($self->{shooter_});
-                    my $killer = $ident->nick;
+                    my $killer_ident = Bambot::Ident->new($self->{shooter_});
+                    my $killer = $killer_ident->nick;
 
                     $self->privmsg($target,
                             "$killer shot me, but I don't blame them ...");
