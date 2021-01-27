@@ -1189,30 +1189,33 @@ sub process_server_message {
             } else {
                 $self->log('Spartan utterance...miss.');
             }
-        } elsif ($is_friendly && $msg eq 'Who shot who?') {
-            if (exists $self->{shooter_}) {
-                my $ident = Bambot::Ident->new($self->{shooter_});
-                my ($killer, $victim) = ($ident->nick, $self->{shot_});
+        } elsif ($is_friendly && $msg =~ /^Who shot (who|you)\?$/i) {
+            my $whom = lc($1);
+            if ($whom eq 'who') {
+                if (exists $self->{shooter_}) {
+                    my $ident = Bambot::Ident->new($self->{shooter_});
+                    my ($killer, $victim) = ($ident->nick, $self->{shot_});
 
-                $self->swap_nick_with_me($killer);
-                $self->swap_nick_with_me($victim);
+                    $self->swap_nick_with_me($killer);
+                    $self->swap_nick_with_me($victim);
 
-                $self->privmsg($target,
-                        "$killer shot $victim, but I don't blame them ...");
-            } else {
-                $self->privmsg($target,
-                        $self->personalize($target, $nick, ));
-            }
-        } elsif ($is_friendly && $msg eq 'Who shot you?') {
-            if (exists $self->{shooter_}) {
-                my $ident = Bambot::Ident->new($self->{shooter_});
-                my $killer = $ident->nick;
+                    $self->privmsg($target,
+                            "$killer shot $victim, but I don't blame them ...");
+                } else {
+                    $self->privmsg($target,
+                            $self->personalize($target, $nick, 'Nobody was shot.'));
+                }
+            } elsif ($whom eq 'you') {
+                if (exists $self->{shooter_}) {
+                    my $ident = Bambot::Ident->new($self->{shooter_});
+                    my $killer = $ident->nick;
 
-                $self->privmsg($target,
-                        "$killer shot me, but I don't blame them ...");
-            } else {
-                $self->privmsg($target,
-                        $self->personalize($target, $nick, ));
+                    $self->privmsg($target,
+                            "$killer shot me, but I don't blame them ...");
+                } else {
+                    $self->privmsg($target,
+                            $self->personalize($target, $nick, 'I was not shot.'));
+                }
             }
         } else {
             $self->log("Unrecognized user input from $nick: {{{$msg}}}",
