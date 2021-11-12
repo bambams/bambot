@@ -138,7 +138,7 @@ sub compress {
 
     require File::Write::Rotate;
     my $rotator = File::Write::Rotate->new(
-            $config->{log_dir},
+            dir => $config->{log_dir},
             histories => 500,
             prefix => 'bambot',
             size => 1024 ** 2,
