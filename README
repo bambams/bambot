@@ -39,7 +39,7 @@ is the host and master. For now that is all I'll describe to get you
 started. You can look through the code to see what other configuration
 options are available and what they do.
 
-  host     The server to connect to. E.g., irc.freenode.net.
+  host     The server to connect to. E.g., irc.libera.chat.
 
   master   The user and hostmask cloak of the master user. E.g.,
            user@unaffiliated/user. You should probably use a NickServ
