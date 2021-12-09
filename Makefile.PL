@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use ExtUtils::MakeMaker;
+use ExtUtils::MakeMaker qw( WriteMakefile );
 
 WriteMakefile(
         AUTHOR => 'Brandon McCaig <bamccaig@gmail.com>',

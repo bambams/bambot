@@ -34,8 +34,8 @@ use overload (
     'cmp' => \&compare_,
 );
 
-use Data::Dumper;
-use Digest::SHA1 qw/sha1_hex/;
+use Data::Dumper ();
+use Digest::SHA1 qw( sha1_hex );
 
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;

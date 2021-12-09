@@ -26,13 +26,13 @@ use strict;
 use utf8;
 use warnings;
 
-use Carp;
-use Data::Dumper;
+use Carp qw( carp croak );
+use Data::Dumper ();
 
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent = 1;
 
-use Bambot::Random;
+use Bambot::Random ();
 
 our @CARP_NOT = qw/Bambot/;
 

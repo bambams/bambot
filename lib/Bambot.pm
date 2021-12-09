@@ -36,21 +36,21 @@ use constant {
 
 our ($EST, $VERSION);
 
-use Carp;
-use Class::Unload;
-use Data::Dumper;
-use DateTime;
-use DateTime::Format::Duration;
-use DateTime::Format::Natural;
-use Encode;
-use English qw/$PERL_VERSION/;
-use Errno::AnyString qw/custom_errstr/;
-use File::Write::Rotate;
-use File::Slurp qw(edit_file slurp);
-use IO::Handle;
-use IO::Select;
-use IO::Socket::INET;
-use List::Util qw(min);
+use Carp qw( carp croak );
+use Class::Unload ();
+use Data::Dumper qw( Dumper );
+use DateTime ();
+use DateTime::Format::Duration ();
+use DateTime::Format::Natural ();
+use Encode qw( encode );
+use English qw( *PERL_VERSION );
+use Errno::AnyString qw( custom_errstr );
+use File::Write::Rotate ();
+use File::Slurp qw( edit_file slurp );
+use IO::Handle qw( print );
+use IO::Select ();
+use IO::Socket::INET ();
+use List::Util qw( min );
 
 my @submodules = qw(
     Bambot::Ident
